@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/client'
+import { useSession } from 'next-auth/react'
 import Layout from '../components/layout'
 import AccessDenied from '../components/access-denied'
 
 export default function Page () {
-  const [ session, loading ] = useSession()
+  const { data: session, status } = useSession()
   const [ content , setContent ] = useState()
 
   // Fetch content from protected route
@@ -18,7 +18,7 @@ export default function Page () {
   },[session])
 
   // When rendering client side don't display anything until loading is complete
-  if (typeof window !== 'undefined' && loading) return null
+  if (typeof window !== 'undefined' && status == "loading") return null
 
   // If no session exists, display access denied message
   if (!session) { return  <Layout><AccessDenied/></Layout> }
