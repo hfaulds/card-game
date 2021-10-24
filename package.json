@@ -25,6 +25,7 @@
     "semi": false
   },
   "dependencies": {
+    "@heroicons/react": "^1.0.5",
     "@next-auth/prisma-adapter": "^0.5.2-next.19",
     "@prisma/client": "^3.3.0",
     "next": "^11.0.0",
