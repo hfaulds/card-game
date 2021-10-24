@@ -14,15 +14,16 @@ export default async function protectedHandler(
       error: "You must be sign in to view the protected content on this page.",
     })
   }
-  const { body: { name }, method } = req
+  const user = await prisma.user.findUnique({
+    where: {
+      email: session.user.email,
+    },
+  })
+  const { method } = req
   switch (method) {
     case 'POST':
-      const user = await prisma.user.findUnique({
-        where: {
-          email: session.user.email,
-        },
-      })
-      await prisma.game.create({
+      const { body: { name } } = req
+      const newGame = await prisma.game.create({
         data: {
           name: name,
           users: {
@@ -30,10 +31,39 @@ export default async function protectedHandler(
           },
           state: {},
         },
+        include: {
+          users: true,
+        },
       })
       res.statusCode = 201
-      res.json({ name })
+      res.json({ newGame })
       break
+    case 'DELETE':
+      const { body: { id } } = req
+      const gameToDelete = await prisma.game.findMany({
+        where: {
+          id: id,
+          users: {
+            every: {
+              id: user.id,
+            },
+          },
+        },
+      })
+      if (gameToDelete.length != 1) {
+        res.status(403).end(`Access Denied`)
+      }
+      const deletedGame = await prisma.game.delete({
+        where: {
+          id: id,
+        },
+        select:  {
+          id: true,
+        },
+      })
+      res.statusCode = 200
+      res.json({ game: deletedGame })
+      break;
     default:
       res.setHeader('Allow', ['GET', 'PUT'])
       res.status(405).end(`Method ${method} Not Allowed`)

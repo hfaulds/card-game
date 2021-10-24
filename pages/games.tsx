@@ -3,16 +3,15 @@ import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
 import Layout from "../components/layout"
 import prisma from "/lib/prisma"
+import { useState } from "react"
 
-export default function Page({user, games}) {
-  // As this page uses Server Side Rendering, the `session` will be already
-  // populated on render without needing to go through a loading stage.
-  // This is possible because of the shared context configured in `_app.js` that
-  // is used by `useSession()`.
+export default function Page(props) {
   const { data: session } = useSession()
   if(!session) {
     return <Layout/>
   }
+
+  const [games, setGames] = useState(props.games)
 
   const newGame = async () => {
     const res = await fetch('api/games', {
@@ -24,29 +23,60 @@ export default function Page({user, games}) {
       },
       method: 'POST'
     })
+    if(!res.ok) {
+      return
+    }
+    const game = (await res.json()).game
+    setGames(games.concat([game]))
+  }
+
+  const deleteGame = async (id) => {
+    const res = await fetch('api/games', {
+      body: JSON.stringify({
+        id: id,
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'DELETE'
+    })
+    if(!res.ok) {
+      return
+    }
+    const removed = (await res.json()).game
+    setGames(games.filter((g) => g.id != removed.id))
   }
 
   return (
     <Layout>
-      <h1 className="text-3xl">{ user.name }</h1>
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={newGame}> New Game </button>
+      <div className="pb-2">
+        <h1 className="text-3xl">{ props.user.name }</h1>
+      </div>
+      <div className="pb-2">
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={newGame}> New Game </button>
+      </div>
       <table className="table-fixed w-full">
+        <tbody>
         {
           games.map((game) =>
             <tr key={game.id}>
-              <td className="border">
+              <td className="border p-2">
                 <h3>{game.name}</h3>
               </td>
-              <td className="border">
+              <td className="border p-2">
                 {
                   game.users.map((user) =>
                     user.name
                   )
                 }
               </td>
+              <td className="border p-2">
+                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}> Delete </button>
+              </td>
             </tr>
           )
         }
+        </tbody>
       </table>
     </Layout>
   )
