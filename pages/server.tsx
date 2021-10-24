@@ -28,16 +28,16 @@ export default function Page({user, games}) {
 
   return (
     <Layout>
-      <h1>{ user.name }</h1>
-      <button onClick={newGame}> New Game </button>
-      <table>
+      <h1 className="text-3xl">{ user.name }</h1>
+      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={newGame}> New Game </button>
+      <table className="table-fixed w-full">
         {
           games.map((game) =>
-            <tr>
-              <td>
+            <tr key={game.id}>
+              <td className="border">
                 <h3>{game.name}</h3>
               </td>
-              <td>
+              <td className="border">
                 {
                   game.users.map((user) =>
                     user.name
