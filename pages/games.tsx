@@ -49,10 +49,10 @@ export default function Page(props) {
 
   return (
     <Layout>
-      <div className="pb-2">
+      <div className="pb-4">
         <h1 className="text-3xl">{ props.user.name }</h1>
       </div>
-      <div className="pb-2">
+      <div className="pb-4">
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={newGame}> New Game </button>
       </div>
       <table className="table-fixed w-full">
@@ -60,18 +60,18 @@ export default function Page(props) {
         {
           games.map((game) =>
             <tr key={game.id}>
-              <td className="border p-2">
-                <h3>{game.name}</h3>
+              <td className="p-2 pr-10">
+                <span className="font-bold capitalize">{game.name}</span>
               </td>
-              <td className="border p-2">
+              <td className="p-2">
                 {
                   game.users.map((user) =>
-                    user.name
+                    <img key={game.id + user.id} src={session.user.image} className="w-8 h-8 rounded-full mr-2"/>
                   )
                 }
               </td>
-              <td className="border p-2">
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}> Delete </button>
+              <td className="p-2">
+                <button className="float-right bg-red-500 hover:bg-red-500 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}> Delete </button>
               </td>
             </tr>
           )

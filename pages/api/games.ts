@@ -36,7 +36,7 @@ export default async function protectedHandler(
         },
       })
       res.statusCode = 201
-      res.json({ newGame })
+      res.json({ game: newGame })
       break
     case 'DELETE':
       const { body: { id } } = req
