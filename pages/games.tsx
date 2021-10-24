@@ -74,7 +74,7 @@ export default function Page(props) {
               <td className="pr-10">
                 <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 mr-4 rounded" onClick={() => openGame(game.id)}>
 
-                  <ChevronDoubleRightIcon className="h-3 w-3"/>
+                  <ChevronDoubleRightIcon className="h-4 w-4"/>
                 </button>
                 <span className="font-bold capitalize">{game.name}</span>
               </td>
@@ -84,12 +84,11 @@ export default function Page(props) {
                     <img key={game.id + user.id} src={session.user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
                   )
                 }
-                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 hover:text-gray-600" onClick={() => addUserToGame(game.id)}/>
+                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => addUserToGame(game.id)}/>
               </td>
               <td className="p-2">
                 <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}>
-
-                  <TrashIcon className="h-5 w-5"/>
+                  <TrashIcon className="h-4 w-4"/>
                 </button>
               </td>
             </tr>

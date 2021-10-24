@@ -23,15 +23,15 @@ export default function NewGameModal(props) {
             </div>
             <div className="mt-2">
               <p className="text-sm text-gray-500">
-                Are you sure you want to deactivate your account? All of your data will be permanently removed. This action cannot be undone.
+                Create a new game and play with your friends.
               </p>
             </div>
           </div>
         </div>
       </div>
       <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={props.hide}> Cancel </button>
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { props.complete(name) && props.hide() }}> New Game </button>
-        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={props.hide}> Cancel </button>
       </div>
     </Modal>
   )
