@@ -3,6 +3,7 @@ import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
 import Layout from "../components/layout"
 import NewGameModal from "../components/new_game_modal"
+import ManagePlayersModal from "../components/manage_players_modal"
 import prisma from "/lib/prisma"
 import { useState } from "react"
 import { ChevronDoubleRightIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/outline'
@@ -16,6 +17,7 @@ export default function Page(props) {
   const router = useRouter()
   const [games, setGames] = useState(props.games)
   const [showingNewGameModal, setShowingNewGameModal] = useState(false)
+  const [managePlayersForGame, setManagePlayersForGame] = useState(undefined)
 
   const newGame = async (name, players) => {
     const res = await fetch('api/games', {
@@ -35,7 +37,52 @@ export default function Page(props) {
     setGames(games.concat([game]))
   }
 
-  const addUserToGame = async (gameId, userId) => {
+  const addPlayer = async (gameId, email) => {
+    const res = await fetch(`api/game/${gameId}`, {
+      body: JSON.stringify({ email }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'POST'
+    })
+    if(!res.ok) {
+      return
+    }
+    const newInvite = (await res.json()).invite
+    const newGames = games.map((game) => {
+      if(!game.id == gameId) {
+        return game
+      }
+      return {
+        id: game.id,
+        users: game.users.concat(newInvite)
+      }
+    })
+    setGames(newGames)
+    return newInvite
+  }
+
+  const removePlayer = async (gameId, inviteId) => {
+    const res = await fetch(`api/game/${gameId}`, {
+      body: JSON.stringify({ inviteId }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'DELETE'
+    })
+    if(!res.ok) {
+      return
+    }
+    const newGames = games.map((game) => {
+      if(!game.id == gameId) {
+        return game
+      }
+      return {
+        id: game.id,
+        users: game.users.filter((u) => u.id != inviteId),
+      }
+    })
+    setGames(newGames)
   }
 
   const deleteGame = async (id) => {
@@ -65,7 +112,7 @@ export default function Page(props) {
         <h1 className="text-3xl">{ props.user.name }</h1>
       </div>
       <div className="pb-4">
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewGameModal(true) }}> New Game </button>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewGameModal(true) && setManagePlayersForGame(undefined) }}> New Game </button>
       </div>
       <table className="table-fixed w-full">
         <tbody>
@@ -81,11 +128,11 @@ export default function Page(props) {
               </td>
               <td className="p-2">
                 {
-                  game.users.map((user) =>
-                    <img key={game.id + user.id} src={session.user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
+                  game.users.filter((gameUser) => !!gameUser.accepted).map(({user}) =>
+                    <img key={game.id + user.id} src={user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
                   )
                 }
-                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => addUserToGame(game.id)}/>
+                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForGame(game)}/>
               </td>
               <td className="p-2">
                 <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}>
@@ -98,6 +145,7 @@ export default function Page(props) {
         </tbody>
       </table>
       { showingNewGameModal && <NewGameModal hide={() => setShowingNewGameModal(false)} complete={newGame} defaultName={`New Game${games.length == 0 ? "" : " " + (games.length + 1)}`}/> }
+      { !!managePlayersForGame && <ManagePlayersModal game={managePlayersForGame} hide={() => setManagePlayersForGame(undefined)} addPlayer={addPlayer} removePlayer={removePlayer} currentUser={session.user}/> }
     </Layout>
   )
 }
@@ -117,13 +165,17 @@ export const getServerSideProps: GetServerSideProps<{
   const games = await prisma.game.findMany({
     where: {
       users: {
-        every: {
-          userId: user.id,
+        some: {
+          userEmail: user.email,
         },
       },
     },
     include: {
-      users: true,
+      users: {
+        include: {
+          user: true,
+        },
+      },
     },
   })
   return {

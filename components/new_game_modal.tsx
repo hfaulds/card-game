@@ -45,7 +45,7 @@ export default function NewGameModal(props) {
                 Players
               </label>
               <input
-                className={`inline-block shadow appearance-none border ${name.length == 0 ? "border-red-500" : ""} rounded w-10/12 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2`}
+                className="inline-block shadow appearance-none border rounded w-10/12 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
                 id="player"
                 type="text" placeholder="test@example.com" value={newPlayer }onChange={(e) => setNewPlayer(e.target.value)}/>
               <button className="inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded" onClick={() => addPlayer()}>

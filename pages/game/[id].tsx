@@ -34,17 +34,22 @@ export const getServerSideProps: GetServerSideProps<{
   if (!session) {
     return {props: {}}
   }
-  const user = await prisma.user.findUnique({
-    where: {
-      email: session.user.email,
-    },
-  })
   const game = await prisma.game.findFirst({
     where: {
       id: context.params.id,
       users: {
-        every: {
-          id: user.id,
+        some: {
+          userEmail: session.user.email,
+          accepted: {
+            not: null,
+          },
+        },
+      },
+    },
+    include: {
+      users: {
+        include: {
+          user: true,
         },
       },
     },
@@ -52,7 +57,6 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       session: session,
-      user: user,
       game: game,
     },
   }

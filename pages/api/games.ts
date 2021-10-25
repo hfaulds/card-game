@@ -1,4 +1,3 @@
-// This is an example of to protect an API route
 import { getSession } from "next-auth/react"
 import type { NextApiRequest, NextApiResponse } from "next"
 
@@ -23,20 +22,12 @@ export default async function protectedHandler(
   switch (method) {
     case 'POST':
       const { body: { name, players } } = req
-      const playerUsers = await prisma.user.findMany({
-        where: {
-          email: {
-            in: players,
-            not: session.user.email,
-          }
-        },
-      })
-      const users = playerUsers.map((u) => {
+      const users = players.map((p) => {
         return {
           admin: false,
           user: {
             connect: {
-              id: u.id,
+              email: p.email,
             },
           },
         }
@@ -45,7 +36,7 @@ export default async function protectedHandler(
         accepted: new Date(),
         user: {
           connect: {
-            id: user.id,
+            email: user.email,
           },
         },
       })
@@ -71,7 +62,8 @@ export default async function protectedHandler(
           id: id,
           users: {
             every: {
-              userId: user.id,
+              admin: true,
+              email: user.email,
             },
           },
         },
@@ -80,7 +72,7 @@ export default async function protectedHandler(
         }
       })
       if (gameToDelete.length != 1) {
-        res.status(403).end(`Access Denied`)
+        return res.status(403).end(`Access Denied`)
       }
       await prisma.game.delete({
         where: {

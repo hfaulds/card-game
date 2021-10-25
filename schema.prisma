@@ -65,13 +65,13 @@ model Game {
 }
 
 model GamesOnUsers {
-  id       String    @id @default(cuid())
-  game     Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId   String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
-  admin    Boolean
-  accepted DateTime?
+  id        String    @id @default(cuid())
+  game      Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId    String
+  user      User?      @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+  userEmail String
+  admin     Boolean
+  accepted  DateTime?
 
-  @@unique([gameId, userId])
+  @@unique([gameId, userEmail])
 }
