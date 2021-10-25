@@ -22,22 +22,38 @@ export default async function protectedHandler(
   const { method } = req
   switch (method) {
     case 'POST':
-      const { body: { name } } = req
+      const { body: { name, players } } = req
+      const playerUsers = await prisma.user.findMany({
+        where: {
+          email: {
+            in: players,
+            not: session.user.email,
+          }
+        },
+      })
+      const users = playerUsers.map((u) => {
+        return {
+          admin: false,
+          user: {
+            connect: {
+              id: u.id,
+            },
+          },
+        }
+      }).concat({
+        admin: true,
+        accepted: new Date(),
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+      })
       const newGame = await prisma.game.create({
         data: {
           name: name,
           users: {
-            create: [
-              {
-                admin: true,
-                accepted: new Date(),
-                user: {
-                  connect: {
-                    id: user.id,
-                  },
-                },
-              },
-            ],
+            create: users,
           },
           state: {},
         },

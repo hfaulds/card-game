@@ -17,10 +17,11 @@ export default function Page(props) {
   const [games, setGames] = useState(props.games)
   const [showingNewGameModal, setShowingNewGameModal] = useState(false)
 
-  const newGame = async (name) => {
+  const newGame = async (name, players) => {
     const res = await fetch('api/games', {
       body: JSON.stringify({
         name: name,
+        players: players,
       }),
       headers: {
         'Content-Type': 'application/json'
