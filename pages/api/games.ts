@@ -27,7 +27,17 @@ export default async function protectedHandler(
         data: {
           name: name,
           users: {
-            connect: { id: user.id }
+            create: [
+              {
+                admin: true,
+                accepted: new Date(),
+                user: {
+                  connect: {
+                    id: user.id,
+                  },
+                },
+              },
+            ],
           },
           state: {},
         },
@@ -45,24 +55,24 @@ export default async function protectedHandler(
           id: id,
           users: {
             every: {
-              id: user.id,
+              userId: user.id,
             },
           },
         },
+        select: {
+          id: true,
+        }
       })
       if (gameToDelete.length != 1) {
         res.status(403).end(`Access Denied`)
       }
-      const deletedGame = await prisma.game.delete({
+      await prisma.game.delete({
         where: {
-          id: id,
-        },
-        select:  {
-          id: true,
+          id: gameToDelete[0].id,
         },
       })
       res.statusCode = 200
-      res.json({ game: deletedGame })
+      res.json({ game: { id } })
       break;
     default:
       res.setHeader('Allow', ['GET', 'PUT'])

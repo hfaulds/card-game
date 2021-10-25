@@ -1,11 +1,11 @@
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
   referentialIntegrity = "prisma"
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["referentialIntegrity"]
 }
 
@@ -39,14 +39,14 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?        @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
-  Games         Game[]
+  games         GamesOnUsers[]
 }
 
 model VerificationToken {
@@ -58,8 +58,20 @@ model VerificationToken {
 }
 
 model Game {
-  id    String  @id @default(cuid())
+  id    String         @id @default(cuid())
   name  String?
-  users User[]
+  users GamesOnUsers[]
   state Json
+}
+
+model GamesOnUsers {
+  id       String    @id @default(cuid())
+  game     Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  admin    Boolean
+  accepted DateTime?
+
+  @@unique([gameId, userId])
 }

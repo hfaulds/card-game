@@ -117,7 +117,7 @@ export const getServerSideProps: GetServerSideProps<{
     where: {
       users: {
         every: {
-          id: user.id,
+          userId: user.id,
         },
       },
     },
