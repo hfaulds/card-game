@@ -5,7 +5,7 @@ import Layout from "../components/layout"
 import NewGameModal from "../components/new_game_modal"
 import ManagePlayersModal from "../components/manage_players_modal"
 import prisma from "/lib/prisma"
-import { useState } from "react"
+import { useState, useReducer } from "react"
 import { ChevronDoubleRightIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
 
@@ -15,81 +15,87 @@ export default function Page(props) {
     return <Layout/>
   }
   const router = useRouter()
-  const [games, setGames] = useState(props.games)
   const [showingNewGameModal, setShowingNewGameModal] = useState(false)
   const [managePlayersForGame, setManagePlayersForGame] = useState(undefined)
 
-  const newGame = async (name, players) => {
+  const gameActions = {
+    CreateGame:   'CreateGame',
+    DeleteGame:   'DeleteGame',
+    AddPlayer:    'AddPlayer',
+    RemovePlayer: 'RemovePlaer',
+  }
+  const gamesReducer = (games, action) => {
+    switch (action.type) {
+      case gameActions.CreateGame:
+        return games.concat([action.value])
+      case gameActions.DeleteGame:
+        return games.filter((g) => g.id != action.value)
+      case gameActions.AddPlayer:
+        let { game, invite } = action.value
+        let newGame = {
+          id: game.id,
+          users: game.users.concat(invite),
+        }
+        return games.map((g) => g.id == game.id ? newGame : g)
+      case gameActions.RemovePlayer:
+        game = action.value.game
+        let { inviteId } = action.value
+        newGame = {
+          id: game.id,
+          users: game.users.filter((u) => u.id != inviteId),
+        }
+        return games.map((g) => g.id == action.value.game.id ? newGame : g)
+    }
+  }
+  const [games, setGames] = useReducer(gamesReducer, props.games)
+
+  const createGame = async (name, invites) => {
     const res = await fetch('api/games', {
-      body: JSON.stringify({
-        name: name,
-        players: players,
-      }),
+      body: JSON.stringify({ name, invites }),
       headers: {
         'Content-Type': 'application/json'
       },
-      method: 'POST'
+      method: 'POST',
     })
     if(!res.ok) {
       return
     }
     const game = (await res.json()).game
-    setGames(games.concat([game]))
+    setGames({ type: gameActions.CreateGame, value: game })
   }
 
-  const addPlayer = async (gameId, email) => {
-    const res = await fetch(`api/game/${gameId}`, {
+  const addPlayer = async (game, email) => {
+    const res = await fetch(`api/game/${game.id}`, {
       body: JSON.stringify({ email }),
       headers: {
         'Content-Type': 'application/json'
       },
-      method: 'POST'
+      method: 'POST',
     })
     if(!res.ok) {
       return
     }
-    const newInvite = (await res.json()).invite
-    const newGames = games.map((game) => {
-      if(!game.id == gameId) {
-        return game
-      }
-      return {
-        id: game.id,
-        users: game.users.concat(newInvite)
-      }
-    })
-    setGames(newGames)
-    return newInvite
+    const invite = (await res.json()).invite
+    setGames({ type: gameActions.AddPlayer, value: { invite, game: game } })
   }
 
-  const removePlayer = async (gameId, inviteId) => {
-    const res = await fetch(`api/game/${gameId}`, {
-      body: JSON.stringify({ inviteId }),
+  const removePlayer = async (game, invite) => {
+    const res = await fetch(`api/game/${game.id}`, {
+      body: JSON.stringify({ inviteId: invite.id }),
       headers: {
         'Content-Type': 'application/json'
       },
-      method: 'DELETE'
+      method: 'DELETE',
     })
     if(!res.ok) {
       return
     }
-    const newGames = games.map((game) => {
-      if(!game.id == gameId) {
-        return game
-      }
-      return {
-        id: game.id,
-        users: game.users.filter((u) => u.id != inviteId),
-      }
-    })
-    setGames(newGames)
+    setGames({ type: gameActions.RemovePlayer, value: { inviteId: invite.id, game: game} })
   }
 
   const deleteGame = async (id) => {
     const res = await fetch('api/games', {
-      body: JSON.stringify({
-        id: id,
-      }),
+      body: JSON.stringify({ id }),
       headers: {
         'Content-Type': 'application/json'
       },
@@ -98,8 +104,7 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    const removed = (await res.json()).game
-    setGames(games.filter((g) => g.id != removed.id))
+    setGames({ type: gameActions.DeleteGame, value: id })
   }
 
   const openGame = async (id) => {
@@ -132,7 +137,7 @@ export default function Page(props) {
                     <img key={game.id + user.id} src={user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
                   )
                 }
-                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForGame(game)}/>
+                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForGame(game.id)}/>
               </td>
               <td className="p-2">
                 <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}>
@@ -144,8 +149,14 @@ export default function Page(props) {
         }
         </tbody>
       </table>
-      { showingNewGameModal && <NewGameModal hide={() => setShowingNewGameModal(false)} complete={newGame} defaultName={`New Game${games.length == 0 ? "" : " " + (games.length + 1)}`}/> }
-      { !!managePlayersForGame && <ManagePlayersModal game={managePlayersForGame} hide={() => setManagePlayersForGame(undefined)} addPlayer={addPlayer} removePlayer={removePlayer} currentUser={session.user}/> }
+      { showingNewGameModal && <NewGameModal hide={() => setShowingNewGameModal(false)} complete={createGame} defaultName={`New Game${games.length == 0 ? "" : " " + (games.length + 1)}`}/> }
+      {
+        <ManagePlayersModal
+          game={games.find((g) => g.id == managePlayersForGame)}
+          hide={() => setManagePlayersForGame(undefined)}
+          addPlayer={addPlayer}
+          removePlayer={removePlayer}/>
+      }
     </Layout>
   )
 }

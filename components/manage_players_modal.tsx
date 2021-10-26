@@ -3,26 +3,25 @@ import { useState } from "react"
 import { ChevronDoubleRightIcon, TrashIcon } from '@heroicons/react/outline'
 
 export default function ManagePlayersModal(props) {
+  const { game } = props
+  if (!game) {
+    return <></>
+  }
+
   const [newPlayerEmail, setNewPlayerEmail] = useState("")
-  const [invites, setInvites] = useState(props.game.users)
 
   const addPlayer = async (email) => {
     if (email.length <= 0) {
       return
     }
-    if (invites.map((invite) => invite.userEmail).includes(email)) {
+    if (game.users.map((invite) => invite.userEmail).includes(email)) {
       return
     }
-    const newInvite = await props.addPlayer(props.game.id, email)
-    setInvites(invites.concat(newInvite))
+    await props.addPlayer(game, email)
   }
 
-  const removePlayer = async (inviteId) => {
-    if (invites.length <= 1) {
-      return
-    }
-    await props.removePlayer(props.game.id, inviteId)
-    setInvites(invites.filter((i) => i.id != inviteId))
+  const removePlayer = async (invite) => {
+    await props.removePlayer(game, invite)
   }
 
   return (
@@ -45,15 +44,15 @@ export default function ManagePlayersModal(props) {
                 <ChevronDoubleRightIcon className="h-4 w-4"/>
               </button>
               {
-                invites.filter((invite) => !!invite.accepted).map((invite) => (
+                game.users.filter((invite) => !!invite.accepted).map((invite) => (
                   <div key={invite.id} className="mb-3">
                     <div className="inline-block w-10/12 mr-2">
-                      <span className>
+                      <span>
                         { invite.userEmail }
                       </span>
                       { invite.admin && <span className="font-bold"> (admin)</span> }
                     </div>
-                    <button className="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded" onClick={() => removePlayer(invite.email)}>
+                    <button className="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded" onClick={() => removePlayer(invite)}>
                       <TrashIcon className="h-3 w-3"/>
                     </button>
                   </div>
@@ -63,14 +62,14 @@ export default function ManagePlayersModal(props) {
                 Invites
               </div>
               {
-                invites.filter((invite) => !invite.accepted).map((invite) => (
+                game.users.filter((invite) => !invite.accepted).map((invite) => (
                   <div key={invite.id} className="mt-2">
                     <div className="inline-block w-10/12 mr-2">
-                      <span className>
+                      <span>
                         { invite.userEmail }
                       </span>
                     </div>
-                    <button className="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded" onClick={() => removePlayer(invite.id)}>
+                    <button className="inline-block bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded" onClick={() => removePlayer(invite)}>
                       <TrashIcon className="h-3 w-3"/>
                     </button>
                   </div>
@@ -81,8 +80,7 @@ export default function ManagePlayersModal(props) {
         </div>
       </div>
       <div className="mt-4 bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={props.hide}> Cancel </button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { props.complete(props.game, players) && props.hide() }}> New Game </button>
+        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={props.hide}> Done </button>
       </div>
     </Modal>
   )

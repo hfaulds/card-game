@@ -2,8 +2,8 @@ import Modal from "./modal"
 import { useState } from "react"
 import { ChevronDoubleRightIcon, TrashIcon } from '@heroicons/react/outline'
 
-export default function NewGameModal(props) {
-  const [name, setName] = useState(props.defaultName)
+export default function NewGameModal({ defaultName, hide, complete }) {
+  const [name, setName] = useState(defaultName)
   const [newPlayer, setNewPlayer] = useState("")
   const [players, setPlayers] = useState([])
 
@@ -23,7 +23,7 @@ export default function NewGameModal(props) {
   }
 
   return (
-    <Modal hide={props.hide}>
+    <Modal hide={hide}>
       <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
         <div className="sm:flex sm:items-start">
           <div className="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
@@ -37,7 +37,7 @@ export default function NewGameModal(props) {
               <input
                 className={`shadow appearance-none border ${name.length == 0 ? "border-red-500" : ""} rounded w-10/12 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
                 id="name"
-                type="text" placeholder={props.defaultName} value={name} onChange={(e) => setName(e.target.value)}/>
+                type="text" placeholder={defaultName} value={name} onChange={(e) => setName(e.target.value)}/>
               { name.length == 0 && (<p className="text-red-500 text-xs italic">Please choose a name.</p>) }
             </div>
             <div className="mb-3">
@@ -66,8 +66,8 @@ export default function NewGameModal(props) {
         </div>
       </div>
       <div className="mt-4 bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={props.hide}> Cancel </button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { props.complete(name, players) && props.hide() }}> New Game </button>
+        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={hide}> Cancel </button>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { complete(name, players) && hide() }}> New Game </button>
       </div>
     </Modal>
   )

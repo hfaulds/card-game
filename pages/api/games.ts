@@ -21,24 +21,16 @@ export default async function protectedHandler(
   const { method } = req
   switch (method) {
     case 'POST':
-      const { body: { name, players } } = req
-      const users = players.map((p) => {
+      const { body: { name, invites } } = req
+      const users = invites.map((email) => {
         return {
           admin: false,
-          user: {
-            connect: {
-              email: p.email,
-            },
-          },
+          userEmail: email,
         }
       }).concat({
         admin: true,
         accepted: new Date(),
-        user: {
-          connect: {
-            email: user.email,
-          },
-        },
+        userEmail: user.email,
       })
       const newGame = await prisma.game.create({
         data: {
@@ -49,7 +41,11 @@ export default async function protectedHandler(
           state: {},
         },
         include: {
-          users: true,
+          users: {
+            include: {
+              user: true,
+            },
+          },
         },
       })
       res.statusCode = 201
@@ -61,9 +57,9 @@ export default async function protectedHandler(
         where: {
           id: id,
           users: {
-            every: {
+            some: {
               admin: true,
-              email: user.email,
+              userEmail: user.email,
             },
           },
         },
