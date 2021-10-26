@@ -8,6 +8,7 @@ import prisma from "/lib/prisma"
 import { useState, useReducer } from "react"
 import { ChevronDoubleRightIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
+import { GameActions, GamesReducer } from '/lib/reducers/games'
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -17,37 +18,7 @@ export default function Page(props) {
   const router = useRouter()
   const [showingNewGameModal, setShowingNewGameModal] = useState(false)
   const [managePlayersForGame, setManagePlayersForGame] = useState(undefined)
-
-  const gameActions = {
-    CreateGame:   'CreateGame',
-    DeleteGame:   'DeleteGame',
-    AddPlayer:    'AddPlayer',
-    RemovePlayer: 'RemovePlaer',
-  }
-  const gamesReducer = (games, action) => {
-    switch (action.type) {
-      case gameActions.CreateGame:
-        return games.concat([action.value])
-      case gameActions.DeleteGame:
-        return games.filter((g) => g.id != action.value)
-      case gameActions.AddPlayer:
-        let { game, invite } = action.value
-        let newGame = {
-          id: game.id,
-          users: game.users.concat(invite),
-        }
-        return games.map((g) => g.id == game.id ? newGame : g)
-      case gameActions.RemovePlayer:
-        game = action.value.game
-        let { inviteId } = action.value
-        newGame = {
-          id: game.id,
-          users: game.users.filter((u) => u.id != inviteId),
-        }
-        return games.map((g) => g.id == action.value.game.id ? newGame : g)
-    }
-  }
-  const [games, setGames] = useReducer(gamesReducer, props.games)
+  const [games, setGames] = useReducer(GamesReducer, props.games)
 
   const createGame = async (name, invites) => {
     const res = await fetch('api/games', {
@@ -61,7 +32,7 @@ export default function Page(props) {
       return
     }
     const game = (await res.json()).game
-    setGames({ type: gameActions.CreateGame, value: game })
+    setGames({ type: GameActions.CreateGame, value: game })
   }
 
   const addPlayer = async (game, email) => {
@@ -76,7 +47,7 @@ export default function Page(props) {
       return
     }
     const invite = (await res.json()).invite
-    setGames({ type: gameActions.AddPlayer, value: { invite, game: game } })
+    setGames({ type: GameActions.AddPlayer, value: { invite, game: game } })
   }
 
   const removePlayer = async (game, invite) => {
@@ -90,7 +61,7 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    setGames({ type: gameActions.RemovePlayer, value: { inviteId: invite.id, game: game} })
+    setGames({ type: GameActions.RemovePlayer, value: { inviteId: invite.id, game: game} })
   }
 
   const deleteGame = async (id) => {
@@ -104,7 +75,7 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    setGames({ type: gameActions.DeleteGame, value: id })
+    setGames({ type: GameActions.DeleteGame, value: id })
   }
 
   const openGame = async (id) => {
