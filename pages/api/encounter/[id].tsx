@@ -25,7 +25,10 @@ export default async function protectedHandler(
       users: {
         some: {
           admin: true,
-          userEmail: currentUser.id,
+          userEmail: currentUser.email,
+          accepted: {
+            not: null,
+          },
         },
       },
     },
@@ -34,34 +37,26 @@ export default async function protectedHandler(
     }
   })
   if (!campaign) {
-    res.status(404)
+    res.status(404).end("")
     return
   }
 
   switch (method) {
     case 'POST':
-      if (req.body.email == currentUser.email) {
-        res.statusCode = 422
-        return
-      }
-      const invite = await prisma.campaignsOnUsers.create({
+      const encounter = await prisma.encounter.create({
         data: {
-          campaignId: id,
-          admin: false,
-          userEmail: req.body.email,
+          campaignId: campaign.id,
+	  name: req.body.name,
+	  state: {},
         },
       })
       res.statusCode = 200
-      res.json({ invite })
+      res.json({ encounter })
       break;
     case 'DELETE':
-      if (req.body.email == currentUser.id) {
-        res.statusCode = 422
-        break;
-      }
-      await prisma.campaignsOnUsers.delete({
+      await prisma.encounter.delete({
         where: {
-          id: req.body.inviteId,
+          id: req.body.encounterId,
         },
       })
       res.status(200).send("")

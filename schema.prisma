@@ -58,10 +58,10 @@ model VerificationToken {
 }
 
 model Campaign {
-  id         String                @id @default(cuid())
+  id         String            @id @default(cuid())
   name       String?
   users      CampaignOnUsers[]
-  encounters EncounterOnCampaign[]
+  encounters Encounter[]
 }
 
 model CampaignOnUsers {
@@ -77,15 +77,9 @@ model CampaignOnUsers {
 }
 
 model Encounter {
-  id                  String                @id @default(cuid())
-  EncounterOnCampaign EncounterOnCampaign[]
-}
-
-model EncounterOnCampaign {
-  id          String    @id @default(cuid())
-  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
-  encounterId String
-  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  campaignId  String
-  state       Json
+  id         String   @id @default(cuid())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  name       String
+  state      Json
 }

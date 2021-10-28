@@ -4,9 +4,11 @@ import { useSession, getSession } from "next-auth/react"
 import Layout from "/components/layout"
 import prisma from "/lib/prisma"
 import { useRouter } from 'next/router'
-import { useState } from "react"
+import { useState, useReducer } from "react"
 import Hand from "/components/campaign/hand"
-import Modal from "/components/modal"
+import ManagePlayersModal from "/components/manage_players_modal"
+import { CogIcon, TrashIcon } from '@heroicons/react/outline'
+import { Transition } from 'react-transition-group';
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -20,63 +22,145 @@ export default function Page(props) {
       Campaign not found
     </Layout>
   }
+  const router = useRouter()
+  const [campaign, setCampaign] = useState(props.campaign)
+  const [managePlayersModal , setManagePlayersModal] = useState(false)
 
-  const [manageCharacterModal, setManageCharacterModal] = useState(false)
-
-  const currentCampaignUser = props.campaign.users.find((campaignUser) => campaignUser.userEmail == session.user.email)
-  const endTurn = () => {
+  const addPlayer = async (campaign, email) => {
+    const res = await fetch(`api/campaign/${campaign.id}`, {
+      body: JSON.stringify({ email }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'POST',
+    })
+    if(!res.ok) {
+      return
+    }
+    const invite = (await res.json()).invite
   }
-  const playCard = () => {
+
+  const removePlayer = async (campaign, invite) => {
+    const res = await fetch(`api/encounter/${campaign.id}`, {
+      body: JSON.stringify({ inviteId: invite.id }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'DELETE',
+    })
+    if(!res.ok) {
+      return
+    }
   }
 
-  const cards = [{id: "0"},{id: "1"},{id: "2"},{id: "3"},{id: "4"},{id: "5"}]
+  const addEncounter = async () => {
+    const encounterName = `Encounter ${campaign.encounters.length + 1}`
+    const res = await fetch(`/api/encounter/${campaign.id}`, {
+      body: JSON.stringify({
+        name: encounterName,
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'POST',
+    })
+    if(!res.ok) {
+      return
+    }
+    const encounter = (await res.json()).encounter
+    setCampaign({
+      ...campaign,
+      ...{ encounters: campaign.encounters.concat({
+        created: true,
+        ...encounter,
+      }) },
+    })
+  }
+
+  const removeEncounter = async (encounter) => {
+    const res = await fetch(`/api/encounter/${campaign.id}`, {
+      body: JSON.stringify({
+        encounterId: encounter.id,
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'DELETE',
+    })
+    if(!res.ok) {
+      return
+    }
+    setCampaign({
+      ...campaign,
+      ...{ encounters: campaign.encounters.map((e) => {
+        if (e.id == encounter.id) {
+          return { deleted: true, ...e }
+        }
+        return e
+      }) },
+    })
+  }
+
+  const openEncounter = async (id) => {
+    router.push(`/encounter/${id}`)
+  }
+
   return (
-    <Layout fullscreen="true">
+    <Layout breadcrumbs={[{ text: campaign.name }]}>
       <div className="pb-4">
-        <h1 className="inline-block text-3xl mr-4">{ props.campaign.name }</h1>
-        <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
-          <span className="font-small" onClick={() => setManageCharacterModal(true)}> Manage Character </span>
-        </button>
+        <h1 className="inline-block text-3xl mr-4">{ campaign.name }</h1>
+        <CogIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersModal(true)}/>
       </div>
-
-      <div className="h-4/6 w-full text-center bg-blue-100 flex"
-        style={{
-          backgroundImage: "repeating-linear-gradient(#ccc 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, #ccc 0 1px, transparent 1px 100%)",
-          backgroundSize: "21px 21px",
-        }}>
-        <div className="flex-none w-30">
-        </div>
-        <div className="flex-grow">
-        </div>
-        <div className="flex-none w-30">
-          <div className="border-solid border-4 bg-white p-2">
-            <p className="font-bold mb-2"> Order </p>
-            {
-              props.campaign.users.filter((campaignUser) => !!campaignUser.accepted).map(({user}) =>
-                <p key={user.id} > {user.name} </p>
-              )
-            }
-          </div>
-          {
-            currentCampaignUser.admin && (
-              <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
-                <span className="font-small" onClick={endTurn}> Skip Turn </span>
-              </button>
-            )
-          }
+      <div className="flex flex-col-reverse">
+        {
+          campaign.encounters.map((encounter, i) =>
+            <Transition key={encounter.id} in={!encounter.deleted} appear={!!encounter.created} timeout={{exit: 500}}>
+              { state => (
+                <div key={0} className="flex-col" style={{
+                  transition: `all 500ms ease-in-out`,
+                  ...(state == "entering" && { opacity: 0 }),
+                  ...(state == "entered" && { opacity: 100 }),
+                  ...(state == "exiting" && { opacity: 0 }),
+                  ...(state == "exited" && { opacity: 0, display: "none" }),
+                }}>
+                  <div className="flex w-full">
+                    <div className="flex-grow"/>
+                    <div className="flex-none bg-gray-100 w-0.5 h-10 m-2">
+                    </div>
+                    <div className="flex-grow"/>
+                  </div>
+                  <div className="flex w-full">
+                    <div className="flex-grow"/>
+                    <div className="flex-none border-solid border-2 font-bold p-4 rounded text-center">
+                      <div className="mb-2">
+                        <span className="inline-block"> { encounter.name } </span>
+                        <TrashIcon className="text-gray-300 hover:text-gray-600 inline-block h-4 w-4" onClick={() => removeEncounter(encounter)}/>
+                      </div>
+                      <button className="bg-green-500 hover:bg-green-700 text-white font-bold p-1 rounded" onClick={() => openEncounter(encounter.id)}>
+                        Open
+                      </button>
+                    </div>
+                    <div className="flex-grow"/>
+                  </div>
+                </div>
+              )}
+            </Transition>
+          )
+        }
+        <div className="flex w-full">
+          <div className="flex-grow"/>
+          <button className="flex-none border-solid border-2 font-bold py-2 px-4 rounded hover:bg-gray-100" onClick={addEncounter}>
+            New Encounter
+          </button>
+          <div className="flex-grow"/>
         </div>
       </div>
-
-      <div className="fixed bottom-0 h-60 w-8/12 text-center">
-        <Hand cards={cards} playCard={playCard}/>
-      </div>
-
       {
-        manageCharacterModal && (
-          <Modal hide={() => setManageCharacterModal(null)}>
-            Hi
-          </Modal>
-        )
+      managePlayersModal && <ManagePlayersModal
+          campaign={campaign}
+          hide={() => setManagePlayersModal(undefined)}
+          addPlayer={addPlayer}
+          removePlayer={removePlayer}/>
       }
     </Layout>
   )
@@ -108,6 +192,7 @@ export const getServerSideProps: GetServerSideProps<{
           user: true,
         },
       },
+      encounters: true,
     },
   })
   return {

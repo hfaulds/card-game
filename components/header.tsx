@@ -1,10 +1,7 @@
 import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react"
 
-// The approach used in this component shows how to built a sign in and sign out
-// component that works on pages which support both client and server side
-// rendering, and avoids any flash incorrect content on initial page load.
-export default function Header() {
+export default function Header({breadcrumbs}) {
   const { data: session, status } = useSession()
 
   return (
@@ -12,14 +9,27 @@ export default function Header() {
       <div className="mb-6">
         <div className="flex justify-between items-center border-b-2 border-gray-100 py-6 md:justify-start md:space-x-10">
           <div className="hidden md:flex space-x-10">
-            <a href="/">
+            <Link href="/">
               Home
-            </a>
+            </Link>
           </div>
           <nav className="hidden md:flex space-x-10">
-            <a href="/campaigns" className="text-base font-medium text-gray-500 hover:text-gray-900">
+            <Link href="/campaigns" className="text-base font-medium text-gray-500 hover:text-gray-900">
               Campaigns
-            </a>
+            </Link>
+            {
+              breadcrumbs && breadcrumbs.map((breadcrumb, i) => {
+                if (!!breadcrumb.url) {
+                  return <Link key={i} href={breadcrumb.url} className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    {breadcrumb.text}
+                    </Link>
+                } else {
+                  return <span key={i} className="text-base font-medium text-gray-500">
+                    {breadcrumb.text}
+                  </span>
+                }
+              })
+            }
           </nav>
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
             {!session && (
