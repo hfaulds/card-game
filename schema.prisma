@@ -46,7 +46,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  games         CampaignOnUsers[]
+  campaigns     CampaignOnUsers[]
 }
 
 model VerificationToken {
@@ -65,13 +65,13 @@ model Campaign {
 }
 
 model CampaignOnUsers {
-  id        String    @id @default(cuid())
-  game      Campaign  @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId    String
-  user      User?     @relation(fields: [userEmail], references: [email], onDelete: Cascade)
-  userEmail String
-  admin     Boolean
-  accepted  DateTime?
+  id         String    @id @default(cuid())
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  user       User?     @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+  userEmail  String
+  admin      Boolean
+  accepted   DateTime?
 
-  @@unique([gameId, userEmail])
+  @@unique([campaignId, userEmail])
 }
