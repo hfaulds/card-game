@@ -25,7 +25,10 @@ export default async function protectedHandler(
       users: {
         some: {
           admin: true,
-          userEmail: currentUser.id,
+          userEmail: currentUser.email,
+          accepted: {
+            not: null,
+          },
         },
       },
     },
@@ -33,8 +36,9 @@ export default async function protectedHandler(
       id: true,
     }
   })
+  console.log(campaign)
   if (!campaign) {
-    res.status(404)
+    res.status(404).send("")
     return
   }
 

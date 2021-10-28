@@ -46,7 +46,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  campaigns     CampaignOnUsers[]
+  campaigns     CampaignsOnUsers[]
 }
 
 model VerificationToken {
@@ -60,11 +60,11 @@ model VerificationToken {
 model Campaign {
   id         String            @id @default(cuid())
   name       String?
-  users      CampaignOnUsers[]
+  users      CampaignsOnUsers[]
   encounters Encounter[]
 }
 
-model CampaignOnUsers {
+model CampaignsOnUsers {
   id         String    @id @default(cuid())
   campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId String

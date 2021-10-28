@@ -6,7 +6,7 @@ import NewCampaignModal from "../components/new_campaign_modal"
 import ManagePlayersModal from "../components/manage_players_modal"
 import prisma from "/lib/prisma"
 import { useState, useReducer } from "react"
-import { ChevronDoubleRightIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/outline'
+import { CheckCircleIcon, ChevronDoubleRightIcon, LogoutIcon, PlusCircleIcon, TrashIcon, XCircleIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
 import { CampaignActions, CampaignsReducer } from '/lib/reducers/campaigns'
 
@@ -18,7 +18,12 @@ export default function Page(props) {
   const router = useRouter()
   const [showingNewCampaignModal, setShowingNewCampaignModal] = useState(false)
   const [managePlayersForCampaign, setManagePlayersForCampaign] = useState(undefined)
-  const [campaigns, setCampaigns] = useReducer(CampaignsReducer, props.campaigns)
+  const [campaigns, setCampaigns] = useReducer(CampaignsReducer,
+    props.userCampaigns.filter((uc) => uc.accepted).map((uc) => uc.campaign),
+  )
+  const [invites, setInvites] = useState(
+    props.userCampaigns.filter((uc) => !uc.accepted),
+  )
 
   const createCampaign = async (name, invites) => {
     const res = await fetch('api/campaigns', {
@@ -36,32 +41,36 @@ export default function Page(props) {
   }
 
   const addPlayer = async (campaign, email) => {
-    const res = await fetch(`api/campaign/${campaign.id}`, {
-      body: JSON.stringify({ email }),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      method: 'POST',
-    })
-    if(!res.ok) {
-      return
-    }
-    const invite = (await res.json()).invite
     setCampaigns({ type: CampaignActions.AddPlayer, value: { invite, campaign: campaign } })
   }
 
   const removePlayer = async (campaign, invite) => {
-    const res = await fetch(`api/campaign/${campaign.id}`, {
-      body: JSON.stringify({ inviteId: invite.id }),
-      headers: {
-        'Content-Type': 'application/json'
-      },
+    setCampaigns({ type: CampaignActions.RemovePlayer, value: { inviteId: invite.id, campaign: campaign} })
+  }
+
+  const acceptInvite = async (invite) => {
+    const res = await fetch(`/api/invite/${invite.id}`, {
+      method: 'PUT',
+    })
+    if(!res.ok) {
+      return
+    }
+    setInvites(
+      invites.filter((i) => i.id != invite.id),
+    )
+    setCampaigns({ type: CampaignActions.CreateCampaign, value: invite.campaign })
+  }
+
+  const rejectInvite = async (invite) => {
+    const res = await fetch(`/api/invite/${invite.id}`, {
       method: 'DELETE',
     })
     if(!res.ok) {
       return
     }
-    setCampaigns({ type: CampaignActions.RemovePlayer, value: { inviteId: invite.id, campaign: campaign} })
+    setInvites(
+      invites.filter((i) => i.id != invite.id),
+    )
   }
 
   const deleteCampaign = async (id) => {
@@ -78,26 +87,26 @@ export default function Page(props) {
     setCampaigns({ type: CampaignActions.DeleteCampaign, value: id })
   }
 
-  const openCampaign = async (id) => {
+  const openCampaign = async ({id}) => {
     router.push(`/campaign/${id}`)
   }
 
   return (
     <Layout>
-      <div className="pb-4">
+      <div className="pb-4 mb-5">
         <h1 className="text-3xl">{ props.user.name }</h1>
       </div>
-      <div className="pb-4">
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewCampaignModal(true) && setManagePlayersForCampaign(undefined) }}> New Campaign </button>
+      <div className="pb-4 mb-5">
+        <h1 className="inline-block text-2xl mr-2">Campaigns</h1>
+        <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewCampaignModal(true) && setManagePlayersForCampaign(undefined) }}> New Campaign </button>
       </div>
-      <table className="table-fixed w-full">
+      <table className="table-fixed w-full mb-10">
         <tbody>
         {
-          campaigns.map((campaign) =>
-            <tr key={campaign.id}>
+          campaigns.map((campaign) => {
+            return <tr key={campaign.id}>
               <td className="pr-10">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 mr-4 rounded" onClick={() => openCampaign(campaign.id)}>
-
+                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 mr-4 rounded" onClick={() => openCampaign(campaign)}>
                   <ChevronDoubleRightIcon className="h-4 w-4"/>
                 </button>
                 <span className="font-bold capitalize">{campaign.name}</span>
@@ -114,9 +123,43 @@ export default function Page(props) {
                 <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteCampaign(campaign.id)}>
                   <TrashIcon className="h-4 w-4"/>
                 </button>
+                <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">
+                  <LogoutIcon className="h-4 w-4"/>
+                </button>
               </td>
             </tr>
-          )
+          })
+        }
+        </tbody>
+      </table>
+      <div className="pb-4">
+        <h1 className="inline-block text-2xl mr-2">Invites</h1>
+      </div>
+      <table className="table-fixed w-full">
+        <tbody>
+        {
+          invites.map((invite) => {
+            return <tr key={invite.id}>
+              <td className="pr-10">
+                <span className="font-bold capitalize">{invite.campaign.name}</span>
+              </td>
+              <td className="p-2">
+                {
+                  invite.campaign.users.filter((campaignUser) => !!campaignUser.accepted).map(({user}) =>
+                    <img key={invite.campaign.id + user.id} src={user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
+                  )
+                }
+              </td>
+              <td className="p-2">
+                <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => rejectInvite(invite)}>
+                  <XCircleIcon className="h-4 w-4"/>
+                </button>
+                <button className="float-right bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2" >
+                  <CheckCircleIcon className="h-4 w-4" onClick={() => acceptInvite(invite)}/>
+                </button>
+              </td>
+            </tr>
+          })
         }
         </tbody>
       </table>
@@ -144,18 +187,18 @@ export const getServerSideProps: GetServerSideProps<{
       email: session.user.email,
     },
   })
-  const campaigns = await prisma.campaign.findMany({
+  const userCampaigns = await prisma.campaignsOnUsers.findMany({
     where: {
-      users: {
-        some: {
-          userEmail: user.email,
-        },
-      },
+      userEmail: user.email,
     },
     include: {
-      users: {
+      campaign: {
         include: {
-          user: true,
+          users: {
+            include: {
+              user: true,
+            },
+          },
         },
       },
     },
@@ -164,7 +207,7 @@ export const getServerSideProps: GetServerSideProps<{
     props: {
       session: session,
       user: user,
-      campaigns: campaigns,
+      userCampaigns: userCampaigns,
     },
   }
 }

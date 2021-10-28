@@ -26,31 +26,22 @@ export default function Page(props) {
   const [campaign, setCampaign] = useState(props.campaign)
   const [managePlayersModal , setManagePlayersModal] = useState(false)
 
-  const addPlayer = async (campaign, email) => {
-    const res = await fetch(`api/campaign/${campaign.id}`, {
-      body: JSON.stringify({ email }),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      method: 'POST',
+  const addPlayer = async (campaign, invite) => {
+    setCampaign({
+      ...campaign,
+      ... {
+        users: campaign.users.concat(invite),
+      }
     })
-    if(!res.ok) {
-      return
-    }
-    const invite = (await res.json()).invite
   }
 
   const removePlayer = async (campaign, invite) => {
-    const res = await fetch(`api/encounter/${campaign.id}`, {
-      body: JSON.stringify({ inviteId: invite.id }),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      method: 'DELETE',
+    setCampaign({
+      ...campaign,
+      ... {
+        users: campaign.users.filter((u) => u.id != invite.id)
+      }
     })
-    if(!res.ok) {
-      return
-    }
   }
 
   const addEncounter = async () => {
@@ -70,10 +61,12 @@ export default function Page(props) {
     const encounter = (await res.json()).encounter
     setCampaign({
       ...campaign,
-      ...{ encounters: campaign.encounters.concat({
-        created: true,
-        ...encounter,
-      }) },
+      ...{
+        encounters: campaign.encounters.concat({
+          created: true,
+          ...encounter,
+        }),
+      },
     })
   }
 
@@ -92,12 +85,14 @@ export default function Page(props) {
     }
     setCampaign({
       ...campaign,
-      ...{ encounters: campaign.encounters.map((e) => {
-        if (e.id == encounter.id) {
-          return { deleted: true, ...e }
-        }
-        return e
-      }) },
+      ...{
+        encounters: campaign.encounters.map((e) => {
+          if (e.id == encounter.id) {
+            return { deleted: true, ...e }
+          }
+          return e
+        })
+      },
     })
   }
 
