@@ -38,7 +38,6 @@ export default async function protectedHandler(
           users: {
             create: users,
           },
-          state: {},
         },
         include: {
           users: {
