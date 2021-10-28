@@ -8,7 +8,7 @@ import prisma from "/lib/prisma"
 import { useState, useReducer } from "react"
 import { CheckCircleIcon, ChevronDoubleRightIcon, LogoutIcon, PlusCircleIcon, TrashIcon, XCircleIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
-import { CampaignActions, CampaignsReducer } from '/lib/reducers/campaigns'
+import { CampaignActions, UserCampaignsReducer } from '/lib/reducers/user_campaigns'
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -18,8 +18,8 @@ export default function Page(props) {
   const router = useRouter()
   const [showingNewCampaignModal, setShowingNewCampaignModal] = useState(false)
   const [managePlayersForCampaign, setManagePlayersForCampaign] = useState(undefined)
-  const [campaigns, setCampaigns] = useReducer(CampaignsReducer,
-    props.userCampaigns.filter((uc) => uc.accepted).map((uc) => uc.campaign),
+  const [userCampaigns, setUserCampaigns] = useReducer(UserCampaignsReducer,
+    props.userCampaigns.filter((uc) => uc.accepted),
   )
   const [invites, setInvites] = useState(
     props.userCampaigns.filter((uc) => !uc.accepted),
@@ -37,15 +37,15 @@ export default function Page(props) {
       return
     }
     const campaign = (await res.json()).campaign
-    setCampaigns({ type: CampaignActions.CreateCampaign, value: campaign })
+    setUserCampaigns({ type: CampaignActions.CreateCampaign, value: campaign })
   }
 
-  const addPlayer = async (campaign, email) => {
-    setCampaigns({ type: CampaignActions.AddPlayer, value: { invite, campaign: campaign } })
+  const addPlayer = async (campaign, invite) => {
+    setUserCampaigns({ type: CampaignActions.AddPlayer, value: { invite, campaign: campaign } })
   }
 
   const removePlayer = async (campaign, invite) => {
-    setCampaigns({ type: CampaignActions.RemovePlayer, value: { inviteId: invite.id, campaign: campaign} })
+    setUserCampaigns({ type: CampaignActions.RemovePlayer, value: { inviteId: invite.id, campaign: campaign} })
   }
 
   const acceptInvite = async (invite) => {
@@ -58,7 +58,7 @@ export default function Page(props) {
     setInvites(
       invites.filter((i) => i.id != invite.id),
     )
-    setCampaigns({ type: CampaignActions.CreateCampaign, value: invite.campaign })
+    setUserCampaigns({ type: CampaignActions.CreateCampaign, value: invite.campaign })
   }
 
   const rejectInvite = async (invite) => {
@@ -73,7 +73,7 @@ export default function Page(props) {
     )
   }
 
-  const deleteCampaign = async (id) => {
+  const deleteCampaign = async ({id}) => {
     const res = await fetch('api/campaigns', {
       body: JSON.stringify({ id }),
       headers: {
@@ -84,7 +84,7 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    setCampaigns({ type: CampaignActions.DeleteCampaign, value: id })
+    setUserCampaigns({ type: CampaignActions.DeleteCampaign, value: id })
   }
 
   const openCampaign = async ({id}) => {
@@ -103,8 +103,8 @@ export default function Page(props) {
       <table className="table-fixed w-full mb-10">
         <tbody>
         {
-          campaigns.map((campaign) => {
-            return <tr key={campaign.id}>
+          userCampaigns.map(({id, admin, campaign}) => {
+            return <tr key={id}>
               <td className="pr-10">
                 <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 mr-4 rounded" onClick={() => openCampaign(campaign)}>
                   <ChevronDoubleRightIcon className="h-4 w-4"/>
@@ -117,15 +117,22 @@ export default function Page(props) {
                     <img key={campaign.id + user.id} src={user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
                   )
                 }
-                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForCampaign(campaign.id)}/>
+                {
+                  admin && <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForCampaign(campaign.id)}/>
+                }
               </td>
               <td className="p-2">
-                <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteCampaign(campaign.id)}>
-                  <TrashIcon className="h-4 w-4"/>
-                </button>
-                <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">
-                  <LogoutIcon className="h-4 w-4"/>
-                </button>
+                {
+                  admin ? (
+                    <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteCampaign(campaign)}>
+                      <TrashIcon className="h-4 w-4"/>
+                    </button>
+                  ) : (
+                    <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                      <LogoutIcon className="h-4 w-4"/>
+                    </button>
+                  )
+                }
               </td>
             </tr>
           })
@@ -163,10 +170,10 @@ export default function Page(props) {
         }
         </tbody>
       </table>
-      { showingNewCampaignModal && <NewCampaignModal hide={() => setShowingNewCampaignModal(false)} complete={createCampaign} defaultName={`New Campaign${campaigns.length == 0 ? "" : " " + (campaigns.length + 1)}`}/> }
+      { showingNewCampaignModal && <NewCampaignModal hide={() => setShowingNewCampaignModal(false)} complete={createCampaign} defaultName={`New Campaign${userCampaigns.length == 0 ? "" : " " + (userCampaigns.length + 1)}`}/> }
       {
         <ManagePlayersModal
-          campaign={campaigns.find((g) => g.id == managePlayersForCampaign)}
+          campaign={ !!managePlayersForCampaign && userCampaigns.map((u) => u.campaign).find((c) => c.id == managePlayersForCampaign) }
           hide={() => setManagePlayersForCampaign(undefined)}
           addPlayer={addPlayer}
           removePlayer={removePlayer}/>

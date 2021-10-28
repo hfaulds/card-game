@@ -129,7 +129,9 @@ export default function Page(props) {
                     <div className="flex-none border-solid border-2 font-bold p-4 rounded text-center">
                       <div className="mb-2">
                         <span className="inline-block"> { encounter.name } </span>
-                        <TrashIcon className="text-gray-300 hover:text-gray-600 inline-block h-4 w-4" onClick={() => removeEncounter(encounter)}/>
+                        { props.userCampaign.admin && (
+                          <TrashIcon className="text-gray-300 hover:text-gray-600 inline-block h-4 w-4" onClick={() => removeEncounter(encounter)}/>
+                        )}
                       </div>
                       <button className="bg-green-500 hover:bg-green-700 text-white font-bold p-1 rounded" onClick={() => openEncounter(encounter.id)}>
                         Open
@@ -142,13 +144,17 @@ export default function Page(props) {
             </Transition>
           )
         }
-        <div className="flex w-full">
-          <div className="flex-grow"/>
-          <button className="flex-none border-solid border-2 font-bold py-2 px-4 rounded hover:bg-gray-100" onClick={addEncounter}>
-            New Encounter
-          </button>
-          <div className="flex-grow"/>
-        </div>
+        {
+          props.userCampaign.admin && (
+            <div className="flex w-full">
+              <div className="flex-grow"/>
+              <button className="flex-none border-solid border-2 font-bold py-2 px-4 rounded hover:bg-gray-100" onClick={addEncounter}>
+                New Encounter
+              </button>
+              <div className="flex-grow"/>
+            </div>
+          )
+        }
       </div>
       {
       managePlayersModal && <ManagePlayersModal
@@ -190,10 +196,12 @@ export const getServerSideProps: GetServerSideProps<{
       encounters: true,
     },
   })
+  const userCampaign = campaign.users.find((u) => u.userEmail == session.user.email)
   return {
     props: {
       session: session,
       campaign: campaign,
+      userCampaign: userCampaign,
     },
   }
 }

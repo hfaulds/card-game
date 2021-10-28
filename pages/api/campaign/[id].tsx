@@ -36,7 +36,6 @@ export default async function protectedHandler(
       id: true,
     }
   })
-  console.log(campaign)
   if (!campaign) {
     res.status(404).send("")
     return
