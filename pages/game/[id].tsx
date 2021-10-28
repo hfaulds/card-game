@@ -6,6 +6,7 @@ import prisma from "/lib/prisma"
 import { useRouter } from 'next/router'
 import { useState } from "react"
 import Hand from "/components/game/hand"
+import Modal from "/components/modal"
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -19,10 +20,11 @@ export default function Page(props) {
       Game not found
     </Layout>
   }
+
+  const [manageCharacterModal, setManageCharacterModal] = useState(false)
+
   const currentGameUser = props.game.users.find((gameUser) => gameUser.userEmail == session.user.email)
   const endTurn = () => {
-  }
-  const manageCharacter = () => {
   }
   const playCard = () => {
   }
@@ -33,7 +35,7 @@ export default function Page(props) {
       <div className="pb-4">
         <h1 className="inline-block text-3xl mr-4">{ props.game.name }</h1>
         <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
-          <span className="font-small" onClick={manageCharacter}> Manage Character </span>
+          <span className="font-small" onClick={() => setManageCharacterModal(true)}> Manage Character </span>
         </button>
       </div>
 
@@ -68,6 +70,14 @@ export default function Page(props) {
       <div className="fixed bottom-0 h-60 w-8/12 text-center">
         <Hand cards={cards} playCard={playCard}/>
       </div>
+
+      {
+        manageCharacterModal && (
+          <Modal hide={() => setManageCharacterModal(null)}>
+            Hi
+          </Modal>
+        )
+      }
     </Layout>
   )
 }
