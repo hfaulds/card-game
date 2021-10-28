@@ -3,8 +3,8 @@ import { useState } from "react"
 import { ChevronDoubleRightIcon, TrashIcon } from '@heroicons/react/outline'
 
 export default function ManagePlayersModal(props) {
-  const { game } = props
-  if (!game) {
+  const { campaign } = props
+  if (!campaign) {
     return <></>
   }
 
@@ -14,14 +14,14 @@ export default function ManagePlayersModal(props) {
     if (email.length <= 0) {
       return
     }
-    if (game.users.map((invite) => invite.userEmail).includes(email)) {
+    if (campaign.users.map((invite) => invite.userEmail).includes(email)) {
       return
     }
-    await props.addPlayer(game, email)
+    await props.addPlayer(campaign, email)
   }
 
   const removePlayer = async (invite) => {
-    await props.removePlayer(game, invite)
+    await props.removePlayer(campaign, invite)
   }
 
   return (
@@ -44,7 +44,7 @@ export default function ManagePlayersModal(props) {
                 <ChevronDoubleRightIcon className="h-4 w-4"/>
               </button>
               {
-                game.users.filter((invite) => !!invite.accepted).map((invite) => (
+                campaign.users.filter((invite) => !!invite.accepted).map((invite) => (
                   <div key={invite.id} className="mb-3">
                     <div className="inline-block w-10/12 mr-2">
                       <span>
@@ -62,7 +62,7 @@ export default function ManagePlayersModal(props) {
                 Invites
               </div>
               {
-                game.users.filter((invite) => !invite.accepted).map((invite) => (
+                campaign.users.filter((invite) => !invite.accepted).map((invite) => (
                   <div key={invite.id} className="mt-2">
                     <div className="inline-block w-10/12 mr-2">
                       <span>

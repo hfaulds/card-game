@@ -32,7 +32,7 @@ export default async function protectedHandler(
         accepted: new Date(),
         userEmail: user.email,
       })
-      const newGame = await prisma.game.create({
+      const newCampaign = await prisma.campaign.create({
         data: {
           name: name,
           users: {
@@ -49,11 +49,11 @@ export default async function protectedHandler(
         },
       })
       res.statusCode = 201
-      res.json({ game: newGame })
+      res.json({ campaign: newCampaign })
       break
     case 'DELETE':
       const { body: { id } } = req
-      const gameToDelete = await prisma.game.findMany({
+      const campaignToDelete = await prisma.campaign.findMany({
         where: {
           id: id,
           users: {
@@ -67,16 +67,16 @@ export default async function protectedHandler(
           id: true,
         }
       })
-      if (gameToDelete.length != 1) {
+      if (campaignToDelete.length != 1) {
         return res.status(403).end(`Access Denied`)
       }
-      await prisma.game.delete({
+      await prisma.campaign.delete({
         where: {
-          id: gameToDelete[0].id,
+          id: campaignToDelete[0].id,
         },
       })
       res.statusCode = 200
-      res.json({ game: { id } })
+      res.json({ campaign: { id } })
       break;
     default:
       res.setHeader('Allow', ['GET', 'PUT'])

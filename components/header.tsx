@@ -17,8 +17,8 @@ export default function Header() {
             </a>
           </div>
           <nav className="hidden md:flex space-x-10">
-            <a href="/games" className="text-base font-medium text-gray-500 hover:text-gray-900">
-              Games
+            <a href="/campaigns" className="text-base font-medium text-gray-500 hover:text-gray-900">
+              Campaigns
             </a>
           </nav>
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">

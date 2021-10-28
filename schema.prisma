@@ -39,14 +39,14 @@ model Session {
 }
 
 model User {
-  id            String         @id @default(cuid())
+  id            String            @id @default(cuid())
   name          String?
-  email         String?        @unique
+  email         String?           @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
-  games         GamesOnUsers[]
+  games         CampaignOnUsers[]
 }
 
 model VerificationToken {
@@ -57,18 +57,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Game {
-  id    String         @id @default(cuid())
+model Campaign {
+  id    String            @id @default(cuid())
   name  String?
-  users GamesOnUsers[]
+  users CampaignOnUsers[]
   state Json
 }
 
-model GamesOnUsers {
+model CampaignOnUsers {
   id        String    @id @default(cuid())
-  game      Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game      Campaign  @relation(fields: [gameId], references: [id], onDelete: Cascade)
   gameId    String
-  user      User?      @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+  user      User?     @relation(fields: [userEmail], references: [email], onDelete: Cascade)
   userEmail String
   admin     Boolean
   accepted  DateTime?

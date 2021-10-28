@@ -5,25 +5,25 @@ import Layout from "/components/layout"
 import prisma from "/lib/prisma"
 import { useRouter } from 'next/router'
 import { useState } from "react"
-import Hand from "/components/game/hand"
+import Hand from "/components/campaign/hand"
 import Modal from "/components/modal"
 
 export default function Page(props) {
   const { data: session } = useSession()
   if(!session) {
     return <Layout>
-      Game not found
+      Campaign not found
     </Layout>
   }
-  if(!props.game) {
+  if(!props.campaign) {
     return <Layout>
-      Game not found
+      Campaign not found
     </Layout>
   }
 
   const [manageCharacterModal, setManageCharacterModal] = useState(false)
 
-  const currentGameUser = props.game.users.find((gameUser) => gameUser.userEmail == session.user.email)
+  const currentCampaignUser = props.campaign.users.find((campaignUser) => campaignUser.userEmail == session.user.email)
   const endTurn = () => {
   }
   const playCard = () => {
@@ -33,7 +33,7 @@ export default function Page(props) {
   return (
     <Layout fullscreen="true">
       <div className="pb-4">
-        <h1 className="inline-block text-3xl mr-4">{ props.game.name }</h1>
+        <h1 className="inline-block text-3xl mr-4">{ props.campaign.name }</h1>
         <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
           <span className="font-small" onClick={() => setManageCharacterModal(true)}> Manage Character </span>
         </button>
@@ -52,13 +52,13 @@ export default function Page(props) {
           <div className="border-solid border-4 bg-white p-2">
             <p className="font-bold mb-2"> Order </p>
             {
-              props.game.users.filter((gameUser) => !!gameUser.accepted).map(({user}) =>
+              props.campaign.users.filter((campaignUser) => !!campaignUser.accepted).map(({user}) =>
                 <p key={user.id} > {user.name} </p>
               )
             }
           </div>
           {
-            currentGameUser.admin && (
+            currentCampaignUser.admin && (
               <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
                 <span className="font-small" onClick={endTurn}> Skip Turn </span>
               </button>
@@ -90,7 +90,7 @@ export const getServerSideProps: GetServerSideProps<{
   if (!session) {
     return {props: {}}
   }
-  const game = await prisma.game.findFirst({
+  const campaign = await prisma.campaign.findFirst({
     where: {
       id: context.params.id,
       users: {
@@ -113,7 +113,7 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       session: session,
-      game: game,
+      campaign: campaign,
     },
   }
 }

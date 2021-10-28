@@ -2,7 +2,7 @@ import Modal from "./modal"
 import { useState } from "react"
 import { ChevronDoubleRightIcon, TrashIcon } from '@heroicons/react/outline'
 
-export default function NewGameModal({ defaultName, hide, complete }) {
+export default function NewCampaignModal({ defaultName, hide, complete }) {
   const [name, setName] = useState(defaultName)
   const [newPlayer, setNewPlayer] = useState("")
   const [players, setPlayers] = useState([])
@@ -28,7 +28,7 @@ export default function NewGameModal({ defaultName, hide, complete }) {
         <div className="sm:flex sm:items-start">
           <div className="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-3" id="modal-title">
-              New Game
+              New Campaign
             </h3>
             <div className="mb-2">
               <label className="block text-gray-700 text-sm font-bold mb-3">
@@ -67,7 +67,7 @@ export default function NewGameModal({ defaultName, hide, complete }) {
       </div>
       <div className="mt-4 bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
         <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={hide}> Cancel </button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { complete(name, players) && hide() }}> New Game </button>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { complete(name, players) && hide() }}> New Campaign </button>
       </div>
     </Modal>
   )

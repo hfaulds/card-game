@@ -2,13 +2,13 @@ import { GetServerSideProps } from "next"
 import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
 import Layout from "../components/layout"
-import NewGameModal from "../components/new_game_modal"
+import NewCampaignModal from "../components/new_campaign_modal"
 import ManagePlayersModal from "../components/manage_players_modal"
 import prisma from "/lib/prisma"
 import { useState, useReducer } from "react"
 import { ChevronDoubleRightIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
-import { GameActions, GamesReducer } from '/lib/reducers/games'
+import { CampaignActions, CampaignsReducer } from '/lib/reducers/campaigns'
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -16,12 +16,12 @@ export default function Page(props) {
     return <Layout/>
   }
   const router = useRouter()
-  const [showingNewGameModal, setShowingNewGameModal] = useState(false)
-  const [managePlayersForGame, setManagePlayersForGame] = useState(undefined)
-  const [games, setGames] = useReducer(GamesReducer, props.games)
+  const [showingNewCampaignModal, setShowingNewCampaignModal] = useState(false)
+  const [managePlayersForCampaign, setManagePlayersForCampaign] = useState(undefined)
+  const [campaigns, setCampaigns] = useReducer(CampaignsReducer, props.campaigns)
 
-  const createGame = async (name, invites) => {
-    const res = await fetch('api/games', {
+  const createCampaign = async (name, invites) => {
+    const res = await fetch('api/campaigns', {
       body: JSON.stringify({ name, invites }),
       headers: {
         'Content-Type': 'application/json'
@@ -31,12 +31,12 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    const game = (await res.json()).game
-    setGames({ type: GameActions.CreateGame, value: game })
+    const campaign = (await res.json()).campaign
+    setCampaigns({ type: CampaignActions.CreateCampaign, value: campaign })
   }
 
-  const addPlayer = async (game, email) => {
-    const res = await fetch(`api/game/${game.id}`, {
+  const addPlayer = async (campaign, email) => {
+    const res = await fetch(`api/campaign/${campaign.id}`, {
       body: JSON.stringify({ email }),
       headers: {
         'Content-Type': 'application/json'
@@ -47,11 +47,11 @@ export default function Page(props) {
       return
     }
     const invite = (await res.json()).invite
-    setGames({ type: GameActions.AddPlayer, value: { invite, game: game } })
+    setCampaigns({ type: CampaignActions.AddPlayer, value: { invite, campaign: campaign } })
   }
 
-  const removePlayer = async (game, invite) => {
-    const res = await fetch(`api/game/${game.id}`, {
+  const removePlayer = async (campaign, invite) => {
+    const res = await fetch(`api/campaign/${campaign.id}`, {
       body: JSON.stringify({ inviteId: invite.id }),
       headers: {
         'Content-Type': 'application/json'
@@ -61,11 +61,11 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    setGames({ type: GameActions.RemovePlayer, value: { inviteId: invite.id, game: game} })
+    setCampaigns({ type: CampaignActions.RemovePlayer, value: { inviteId: invite.id, campaign: campaign} })
   }
 
-  const deleteGame = async (id) => {
-    const res = await fetch('api/games', {
+  const deleteCampaign = async (id) => {
+    const res = await fetch('api/campaigns', {
       body: JSON.stringify({ id }),
       headers: {
         'Content-Type': 'application/json'
@@ -75,11 +75,11 @@ export default function Page(props) {
     if(!res.ok) {
       return
     }
-    setGames({ type: GameActions.DeleteGame, value: id })
+    setCampaigns({ type: CampaignActions.DeleteCampaign, value: id })
   }
 
-  const openGame = async (id) => {
-    router.push(`/game/${id}`)
+  const openCampaign = async (id) => {
+    router.push(`/campaign/${id}`)
   }
 
   return (
@@ -88,30 +88,30 @@ export default function Page(props) {
         <h1 className="text-3xl">{ props.user.name }</h1>
       </div>
       <div className="pb-4">
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewGameModal(true) && setManagePlayersForGame(undefined) }}> New Game </button>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewCampaignModal(true) && setManagePlayersForCampaign(undefined) }}> New Campaign </button>
       </div>
       <table className="table-fixed w-full">
         <tbody>
         {
-          games.map((game) =>
-            <tr key={game.id}>
+          campaigns.map((campaign) =>
+            <tr key={campaign.id}>
               <td className="pr-10">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 mr-4 rounded" onClick={() => openGame(game.id)}>
+                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 mr-4 rounded" onClick={() => openCampaign(campaign.id)}>
 
                   <ChevronDoubleRightIcon className="h-4 w-4"/>
                 </button>
-                <span className="font-bold capitalize">{game.name}</span>
+                <span className="font-bold capitalize">{campaign.name}</span>
               </td>
               <td className="p-2">
                 {
-                  game.users.filter((gameUser) => !!gameUser.accepted).map(({user}) =>
-                    <img key={game.id + user.id} src={user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
+                  campaign.users.filter((campaignUser) => !!campaignUser.accepted).map(({user}) =>
+                    <img key={campaign.id + user.id} src={user.image} className="w-8 h-8 rounded-full mr-2 inline-block"/>
                   )
                 }
-                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForGame(game.id)}/>
+                <PlusCircleIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersForCampaign(campaign.id)}/>
               </td>
               <td className="p-2">
-                <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteGame(game.id)}>
+                <button className="float-right bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => deleteCampaign(campaign.id)}>
                   <TrashIcon className="h-4 w-4"/>
                 </button>
               </td>
@@ -120,11 +120,11 @@ export default function Page(props) {
         }
         </tbody>
       </table>
-      { showingNewGameModal && <NewGameModal hide={() => setShowingNewGameModal(false)} complete={createGame} defaultName={`New Game${games.length == 0 ? "" : " " + (games.length + 1)}`}/> }
+      { showingNewCampaignModal && <NewCampaignModal hide={() => setShowingNewCampaignModal(false)} complete={createCampaign} defaultName={`New Campaign${campaigns.length == 0 ? "" : " " + (campaigns.length + 1)}`}/> }
       {
         <ManagePlayersModal
-          game={games.find((g) => g.id == managePlayersForGame)}
-          hide={() => setManagePlayersForGame(undefined)}
+          campaign={campaigns.find((g) => g.id == managePlayersForCampaign)}
+          hide={() => setManagePlayersForCampaign(undefined)}
           addPlayer={addPlayer}
           removePlayer={removePlayer}/>
       }
@@ -144,7 +144,7 @@ export const getServerSideProps: GetServerSideProps<{
       email: session.user.email,
     },
   })
-  const games = await prisma.game.findMany({
+  const campaigns = await prisma.campaign.findMany({
     where: {
       users: {
         some: {
@@ -164,7 +164,7 @@ export const getServerSideProps: GetServerSideProps<{
     props: {
       session: session,
       user: user,
-      games: games,
+      campaigns: campaigns,
     },
   }
 }

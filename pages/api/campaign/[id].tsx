@@ -19,7 +19,7 @@ export default async function protectedHandler(
     },
   })
   const { method, query: { id } } = req
-  const game = await prisma.game.findMany({
+  const campaign = await prisma.campaign.findMany({
     where: {
       id: id,
       users: {
@@ -33,7 +33,7 @@ export default async function protectedHandler(
       id: true,
     }
   })
-  if (!game) {
+  if (!campaign) {
     res.status(404)
     return
   }
@@ -44,9 +44,9 @@ export default async function protectedHandler(
         res.statusCode = 422
         return
       }
-      const invite = await prisma.gamesOnUsers.create({
+      const invite = await prisma.campaignsOnUsers.create({
         data: {
-          gameId: id,
+          campaignId: id,
           admin: false,
           userEmail: req.body.email,
         },
@@ -59,7 +59,7 @@ export default async function protectedHandler(
         res.statusCode = 422
         break;
       }
-      await prisma.gamesOnUsers.delete({
+      await prisma.campaignsOnUsers.delete({
         where: {
           id: req.body.inviteId,
         },
