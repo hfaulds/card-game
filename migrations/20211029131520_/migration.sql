@@ -56,19 +56,28 @@ CREATE TABLE `VerificationToken` (
 CREATE TABLE `Campaign` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NULL,
-    `state` JSON NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CampaignOnUsers` (
+CREATE TABLE `CampaignsOnUsers` (
     `id` VARCHAR(191) NOT NULL,
     `campaignId` VARCHAR(191) NOT NULL,
     `userEmail` VARCHAR(191) NOT NULL,
     `admin` BOOLEAN NOT NULL,
     `accepted` DATETIME(3) NULL,
 
-    UNIQUE INDEX `CampaignOnUsers_campaignId_userEmail_key`(`campaignId`, `userEmail`),
+    UNIQUE INDEX `CampaignsOnUsers_campaignId_userEmail_key`(`campaignId`, `userEmail`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Encounter` (
+    `id` VARCHAR(191) NOT NULL,
+    `campaignId` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `state` JSON NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
