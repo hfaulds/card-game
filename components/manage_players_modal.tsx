@@ -3,12 +3,12 @@ import { useState } from "react"
 import { ChevronDoubleRightIcon, TrashIcon } from '@heroicons/react/outline'
 
 export default function ManagePlayersModal(props) {
+  const [newPlayerEmail, setNewPlayerEmail] = useState("")
+
   const { campaign } = props
   if (!campaign) {
     return <></>
   }
-
-  const [newPlayerEmail, setNewPlayerEmail] = useState("")
 
   const addPlayer = async (email) => {
     if (email.length <= 0) {

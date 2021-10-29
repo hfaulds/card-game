@@ -1,7 +1,7 @@
 import { getSession } from "next-auth/react"
 import type { NextApiRequest, NextApiResponse } from "next"
 
-import prisma from "/lib/prisma"
+import prisma from "lib/prisma"
 
 export default async function protectedHandler(
   req: NextApiRequest,
@@ -16,10 +16,10 @@ export default async function protectedHandler(
   const { method, query: { id } } = req
   const invite = await prisma.campaignsOnUsers.findUnique({
     where: {
-      id: id,
+      id: <string>id,
     },
   })
-  if (!invite || invite.userEmail != session.user.email) {
+  if (!invite || invite.userEmail != session?.user?.email) {
     res.status(404).end("")
     return
   }
@@ -27,16 +27,22 @@ export default async function protectedHandler(
   switch (method) {
     case 'PUT':
       const invite = await prisma.campaignsOnUsers.update({
-	where: { id },
+        where: {
+          id: <string>id,
+        },
         data: {
-	  accepted: new Date(),
+          accepted: new Date(),
         },
       })
       res.statusCode = 200
       res.json({ invite })
       return
     case 'DELETE':
-      await prisma.campaignsOnUsers.delete({ where: { id } })
+      await prisma.campaignsOnUsers.delete({
+        where: {
+          id: <string>id,
+        },
+      })
       res.status(200).send("")
       return
     default:

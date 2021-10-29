@@ -5,7 +5,7 @@ import { ChevronDoubleRightIcon, TrashIcon } from '@heroicons/react/outline'
 export default function NewCampaignModal({ defaultName, hide, complete }) {
   const [name, setName] = useState(defaultName)
   const [newPlayer, setNewPlayer] = useState("")
-  const [players, setPlayers] = useState([])
+  const [players, setPlayers] = useState<any[]>([])
 
   const addPlayer = () => {
     if (newPlayer.length <= 0) {

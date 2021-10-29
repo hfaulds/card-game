@@ -1,7 +1,7 @@
 import { getSession } from "next-auth/react"
 import type { NextApiRequest, NextApiResponse } from "next"
 
-import prisma from "/lib/prisma"
+import prisma from "lib/prisma"
 
 export default async function protectedHandler(
   req: NextApiRequest,
@@ -15,17 +15,21 @@ export default async function protectedHandler(
   }
   const currentUser = await prisma.user.findUnique({
     where: {
-      email: session.user.email,
+      email: session?.user?.email || undefined,
     },
   })
+  if (!currentUser) {
+    res.status(403).send("")
+    return
+  }
   const { method, query: { id } } = req
   const campaign = await prisma.campaign.findFirst({
     where: {
-      id: id,
+      id: <string>id,
       users: {
         some: {
           admin: true,
-          userEmail: currentUser.email,
+          userEmail: <string>currentUser.email,
           accepted: {
             not: null,
           },
@@ -37,26 +41,34 @@ export default async function protectedHandler(
     }
   })
   if (!campaign) {
-    res.status(404).end("")
+    res.status(404).send("")
     return
   }
 
   switch (method) {
     case 'POST':
-      const encounter = await prisma.encounter.create({
+      if (req.body.email == currentUser.email) {
+        res.statusCode = 422
+        return
+      }
+      const invite = await prisma.campaignsOnUsers.create({
         data: {
-          campaignId: campaign.id,
-	  name: req.body.name,
-	  state: {},
+          campaignId: <string>id,
+          admin: false,
+          userEmail: req.body.email,
         },
       })
       res.statusCode = 200
-      res.json({ encounter })
+      res.json({ invite })
       break;
     case 'DELETE':
-      await prisma.encounter.delete({
+      if (req.body.email == currentUser.id) {
+        res.statusCode = 422
+        break;
+      }
+      await prisma.campaignsOnUsers.delete({
         where: {
-          id: req.body.encounterId,
+          id: req.body.inviteId,
         },
       })
       res.status(200).send("")

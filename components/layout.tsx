@@ -1,9 +1,9 @@
 import Header from "./header"
-import Footer from "./footer"
 
 interface LayoutProps {
-  fullscreen: boolean,
-  children: React.ReactNode
+  fullscreen?: boolean,
+  breadcrumbs?: { text: string, url?: string }[],
+  children: React.ReactNode,
 }
 
 export default function Layout({ fullscreen, breadcrumbs, children }: LayoutProps) {

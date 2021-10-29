@@ -1,20 +1,17 @@
 import { GetServerSideProps } from "next"
 import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
-import Layout from "../components/layout"
-import NewCampaignModal from "../components/new_campaign_modal"
-import ManagePlayersModal from "../components/manage_players_modal"
-import prisma from "/lib/prisma"
+import Layout from "components/layout"
+import NewCampaignModal from "components/new_campaign_modal"
+import ManagePlayersModal from "components/manage_players_modal"
+import prisma from "lib/prisma"
 import { useState, useReducer } from "react"
 import { CheckCircleIcon, ChevronDoubleRightIcon, LogoutIcon, PlusCircleIcon, TrashIcon, XCircleIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
-import { CampaignActions, UserCampaignsReducer } from '/lib/reducers/user_campaigns'
+import { CampaignActions, UserCampaignsReducer } from 'lib/reducers/user_campaigns'
 
 export default function Page(props) {
   const { data: session } = useSession()
-  if(!session) {
-    return <Layout/>
-  }
   const router = useRouter()
   const [showingNewCampaignModal, setShowingNewCampaignModal] = useState(false)
   const [managePlayersForCampaign, setManagePlayersForCampaign] = useState(undefined)
@@ -24,6 +21,10 @@ export default function Page(props) {
   const [invites, setInvites] = useState(
     props.userCampaigns.filter((uc) => !uc.accepted),
   )
+
+  if(!session) {
+    return <Layout> Sign In </Layout>
+  }
 
   const createCampaign = async (name, invites) => {
     const res = await fetch('api/campaigns', {
@@ -98,7 +99,7 @@ export default function Page(props) {
       </div>
       <div className="pb-4 mb-5">
         <h1 className="inline-block text-2xl mr-2">Campaigns</h1>
-        <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewCampaignModal(true) && setManagePlayersForCampaign(undefined) }}> New Campaign </button>
+        <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => { setShowingNewCampaignModal(true); setManagePlayersForCampaign(undefined) }}> New Campaign </button>
       </div>
       <table className="table-fixed w-full mb-10">
         <tbody>
@@ -182,21 +183,22 @@ export default function Page(props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps<{
-  session: Session | null
-}> = async (context) => {
+export const getServerSideProps = async (context) => {
   const session = await getSession(context)
   if (!session) {
     return {props: {}}
   }
   const user = await prisma.user.findUnique({
     where: {
-      email: session.user.email,
+      email: session?.user?.email as string,
     },
   })
+  if (!user) {
+    return {props: {}}
+  }
   const userCampaigns = await prisma.campaignsOnUsers.findMany({
     where: {
-      userEmail: user.email,
+      userEmail: user?.email as string,
     },
     include: {
       campaign: {

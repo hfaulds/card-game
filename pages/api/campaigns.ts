@@ -1,7 +1,7 @@
 import { getSession } from "next-auth/react"
 import type { NextApiRequest, NextApiResponse } from "next"
 
-import prisma from "/lib/prisma"
+import prisma from "lib/prisma"
 
 export default async function protectedHandler(
   req: NextApiRequest,
@@ -15,9 +15,12 @@ export default async function protectedHandler(
   }
   const user = await prisma.user.findUnique({
     where: {
-      email: session.user.email,
+      email: <string>session?.user?.email,
     },
   })
+  if (!user) {
+    return res.status(403).end(`Access Denied`)
+  }
   const { method } = req
   switch (method) {
     case 'POST':
@@ -30,7 +33,7 @@ export default async function protectedHandler(
       }).concat({
         admin: true,
         accepted: new Date(),
-        userEmail: user.email,
+        userEmail: <string>user.email,
       })
       const newCampaign = await prisma.campaign.create({
         data: {
@@ -58,7 +61,7 @@ export default async function protectedHandler(
           users: {
             some: {
               admin: true,
-              userEmail: user.email,
+              userEmail: <string>user.email,
             },
           },
         },

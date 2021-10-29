@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 export default function Hand(props) {
   const [cards, setCards] = useState(props.cards);
   const [hover, setHover] = useState(null)
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<null | { id: String }>(null);
 
   const select = (card) => {
     if (selected == card) {
@@ -18,7 +18,7 @@ export default function Hand(props) {
     {
       cards.map((card, i) => {
         const unselectedCards = cards.length - (!!selected ? 1 : 0)
-        const pos = card.id.localeCompare(selected?.id) < 0 ? i : i - 1
+        const pos = card.id.localeCompare(selected && selected.id) < 0 ? i : i - 1
         // position relative to center
         const relpos = pos - Math.floor(unselectedCards/2) + ((1 - (unselectedCards % 2)) * 0.5)
         // move by 5 rem on x axis per position
@@ -34,11 +34,11 @@ export default function Hand(props) {
             transform: `translate(${x}rem, ${y}rem) rotate(${rot}deg)`,
             transition: "transform 200ms",
             ... (hover == card && {
-              zIndex: "1",
+              zIndex: 1,
               transform: `scale(1.1) translate(${x}rem, ${y - 1.5}rem) rotate(${rot}deg)`,
             }),
             ... (selected == card && {
-              zIndex: "2",
+              zIndex: 2,
               transform: "scale(1.2) translate(-5rem, -5rem)",
             })
           }}

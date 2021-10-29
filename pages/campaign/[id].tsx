@@ -1,17 +1,21 @@
-import { GetServerSideProps } from "nextcard"
+import { GetServerSideProps } from "next"
 import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
-import Layout from "/components/layout"
-import prisma from "/lib/prisma"
+import Layout from "components/layout"
+import prisma from "lib/prisma"
 import { useRouter } from 'next/router'
 import { useState, useReducer } from "react"
-import Hand from "/components/campaign/hand"
-import ManagePlayersModal from "/components/manage_players_modal"
+import Hand from "components/campaign/hand"
+import ManagePlayersModal from "components/manage_players_modal"
 import { CogIcon, TrashIcon } from '@heroicons/react/outline'
 import { Transition } from 'react-transition-group';
 
 export default function Page(props) {
   const { data: session } = useSession()
+  const router = useRouter()
+  const [campaign, setCampaign] = useState(props.campaign)
+  const [managePlayersModal , setManagePlayersModal] = useState(false)
+
   if(!session) {
     return <Layout>
       Campaign not found
@@ -22,9 +26,6 @@ export default function Page(props) {
       Campaign not found
     </Layout>
   }
-  const router = useRouter()
-  const [campaign, setCampaign] = useState(props.campaign)
-  const [managePlayersModal , setManagePlayersModal] = useState(false)
 
   const addPlayer = async (campaign, invite) => {
     setCampaign({
@@ -159,7 +160,7 @@ export default function Page(props) {
       {
       managePlayersModal && <ManagePlayersModal
           campaign={campaign}
-          hide={() => setManagePlayersModal(undefined)}
+          hide={() => setManagePlayersModal(false)}
           addPlayer={addPlayer}
           removePlayer={removePlayer}/>
       }
@@ -167,10 +168,7 @@ export default function Page(props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps<{
-  session: Session | null
-  params: { id: string },
-}> = async (context) => {
+export const getServerSideProps = async (context) => {
   const session = await getSession(context)
   if (!session) {
     return {props: {}}
@@ -180,7 +178,7 @@ export const getServerSideProps: GetServerSideProps<{
       id: context.params.id,
       users: {
         some: {
-          userEmail: session.user.email,
+          userEmail: session?.user?.email as string,
           accepted: {
             not: null,
           },
@@ -196,7 +194,7 @@ export const getServerSideProps: GetServerSideProps<{
       encounters: true,
     },
   })
-  const userCampaign = campaign.users.find((u) => u.userEmail == session.user.email)
+  const userCampaign = campaign && campaign.users.find((u) => u.userEmail == session?.user?.email)
   return {
     props: {
       session: session,

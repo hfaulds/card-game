@@ -10,19 +10,23 @@ export default function Header({breadcrumbs}) {
         <div className="flex justify-between items-center border-b-2 border-gray-100 py-6 md:justify-start md:space-x-10">
           <div className="hidden md:flex space-x-10">
             <Link href="/">
-              Home
+              <a> Home </a>
             </Link>
           </div>
           <nav className="hidden md:flex space-x-10">
-            <Link href="/campaigns" className="text-base font-medium text-gray-500 hover:text-gray-900">
-              Campaigns
+            <Link href="/campaigns">
+              <a className="text-base font-medium text-gray-500 hover:text-gray-900">
+                Campaigns
+              </a>
             </Link>
             {
               breadcrumbs && breadcrumbs.map((breadcrumb, i) => {
                 if (!!breadcrumb.url) {
-                  return <Link key={i} href={breadcrumb.url} className="text-base font-medium text-gray-500 hover:text-gray-900">
-                    {breadcrumb.text}
-                    </Link>
+                  return <Link key={i} href={breadcrumb.url}>
+                    <a className="text-base font-medium text-gray-500 hover:text-gray-900">
+                      {breadcrumb.text}
+                    </a>
+                  </Link>
                 } else {
                   return <span key={i} className="text-base font-medium text-gray-500">
                     {breadcrumb.text}
@@ -47,7 +51,11 @@ export default function Header({breadcrumbs}) {
             )}
             {session?.user && (
               <>
-                <img src={session.user.image} className="w-11 h-11 rounded-full mr-2"/>
+                {
+                  session.user.image && (
+                    <img alt="player icon" src={session.user.image} className="w-11 h-11 rounded-full mr-2"/>
+                  )
+                }
                 <a
                   href={`/api/auth/signout`}
                   onClick={(e) => {

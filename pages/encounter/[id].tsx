@@ -1,15 +1,17 @@
-import { GetServerSideProps } from "nextcard"
+import { GetServerSideProps } from "next"
 import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
-import Layout from "/components/layout"
-import prisma from "/lib/prisma"
+import Layout from "components/layout"
+import prisma from "lib/prisma"
 import { useRouter } from 'next/router'
 import { useState } from "react"
-import Hand from "/components/campaign/hand"
-import Modal from "/components/modal"
+import Hand from "components/campaign/hand"
+import Modal from "components/modal"
 
 export default function Page(props) {
   const { data: session } = useSession()
+  const [manageCharacterModal, setManageCharacterModal] = useState(false)
+
   if(!session) {
     return <Layout>
       Encounter not found
@@ -21,9 +23,7 @@ export default function Page(props) {
     </Layout>
   }
 
-  const [manageCharacterModal, setManageCharacterModal] = useState(false)
-
-  const currentCampaignUser = props.campaign.users.find((campaignUser) => campaignUser.userEmail == session.user.email)
+  const currentCampaignUser = props.campaign.users.find((campaignUser) => campaignUser.userEmail == session?.user?.email)
   const endTurn = () => {
   }
   const playCard = () => {
@@ -31,9 +31,9 @@ export default function Page(props) {
 
   const cards = [{id: "0"},{id: "1"},{id: "2"},{id: "3"},{id: "4"},{id: "5"}]
   return (
-    <Layout fullscreen="true" breadcrumbs={[
-      { text: props.campaign.name, url: `/campaign/${props.campaign.id}` },
-      { text: props.encounter.name }]}>
+    <Layout fullscreen={true} breadcrumbs={[
+      { text: (props.campaign.name as string), url: `/campaign/${props.campaign.id}` },
+      { text: (props.encounter.name as string) }]}>
       <div className="pb-4">
         <h1 className="inline-block text-3xl mr-4">{ props.campaign.name }</h1>
         <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
@@ -75,7 +75,7 @@ export default function Page(props) {
 
       {
         manageCharacterModal && (
-          <Modal hide={() => setManageCharacterModal(null)}>
+          <Modal hide={() => setManageCharacterModal(false)}>
             Hi
           </Modal>
         )
@@ -84,21 +84,18 @@ export default function Page(props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps<{
-  session: Session | null
-  params: { id: string },
-}> = async (context) => {
+export const getServerSideProps = async (context) => {
   const session = await getSession(context)
   if (!session) {
     return {props: {}}
   }
   const encounter = await prisma.encounter.findFirst({
     where: {
-      id: context.params.id,
+      id: context.params.id as string,
       campaign: {
         users: {
           some: {
-            userEmail: session.user.email,
+            userEmail: session?.user?.email as string,
             accepted: {
               not: null,
             },
@@ -122,7 +119,7 @@ export const getServerSideProps: GetServerSideProps<{
     props: {
       session: session,
       encounter: encounter,
-      campaign: encounter.campaign,
+      campaign: encounter?.campaign,
     },
   }
 }
