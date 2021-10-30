@@ -61,6 +61,7 @@ model Campaign {
   name       String?
   users      CampaignsOnUsers[]
   encounters Encounter[]
+  state      Json
 }
 
 model CampaignsOnUsers {
@@ -75,10 +76,17 @@ model CampaignsOnUsers {
   @@unique([campaignId, userEmail])
 }
 
+enum EncounterVisibility {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
 model Encounter {
-  id         String   @id @default(cuid())
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  id         String          @id @default(cuid())
+  campaign   Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId String
   name       String
   state      Json
+  visibility     EncounterVisibility @default(DRAFT)
 }

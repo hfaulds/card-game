@@ -38,6 +38,7 @@ export default async function protectedHandler(
       const newCampaign = await prisma.campaign.create({
         data: {
           name: name,
+          state: {},
           users: {
             create: users,
           },

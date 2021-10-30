@@ -191,10 +191,23 @@ export const getServerSideProps = async (context) => {
           user: true,
         },
       },
-      encounters: true,
     },
   })
+  if (!campaign) {
+    return {props: { session }}
+  }
   const userCampaign = campaign && campaign.users.find((u) => u.userEmail == session?.user?.email)
+  campaign.encounters = await prisma.encounter.findMany({
+    where: {
+      campaignId: campaign.id,
+      ... ( !userCampaign.admin && {
+          NOT: {
+            visibility: "DRAFT",
+          }
+        }
+      )
+    }
+  })
   return {
     props: {
       session: session,
