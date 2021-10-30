@@ -65,7 +65,10 @@ export default function Page(props) {
         />
       )}
 
-      {tab == "players" && campaign.users.filter((campaignUser) => !!campaignUser.accepted).map(({ user }) => user.name)}
+      {tab == "players" &&
+        campaign.users
+          .filter((campaignUser) => !!campaignUser.accepted)
+          .map(({ user }) => user.name)}
     </Layout>
   )
 }
