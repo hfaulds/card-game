@@ -1,18 +1,20 @@
 export const CampaignActions = {
-  CreateCampaign: 'CreateCampaign',
-  DeleteCampaign: 'DeleteCampaign',
-  AddPlayer:      'AddPlayer',
-  RemovePlayer:   'RemovePlaer',
+  CreateCampaign: "CreateCampaign",
+  DeleteCampaign: "DeleteCampaign",
+  AddPlayer: "AddPlayer",
+  RemovePlayer: "RemovePlaer",
 }
 
-export function UserCampaignsReducer(userCampaigns, action){
+export function UserCampaignsReducer(userCampaigns, action) {
   switch (action.type) {
     case CampaignActions.CreateCampaign:
       const userCampaign = action.value.users.find((u) => u.admin)
-      return userCampaigns.concat([{
-        ...userCampaign,
-        campaign: action.value,
-      }])
+      return userCampaigns.concat([
+        {
+          ...userCampaign,
+          campaign: action.value,
+        },
+      ])
     case CampaignActions.DeleteCampaign:
       return userCampaigns.filter((u) => u.campaign.id != action.value)
     case CampaignActions.AddPlayer:
@@ -24,7 +26,7 @@ export function UserCampaignsReducer(userCampaigns, action){
           campaign: {
             ...campaign,
             users: campaign.users.concat(invite),
-          }
+          },
         }
       })
     case CampaignActions.RemovePlayer:
@@ -37,7 +39,7 @@ export function UserCampaignsReducer(userCampaigns, action){
           campaign: {
             ...campaign,
             users: campaign.users.filter((u) => u.id != inviteId),
-          }
+          },
         }
       })
   }

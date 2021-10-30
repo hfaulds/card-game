@@ -13,7 +13,10 @@ export default async function protectedHandler(
       error: "You must be sign in to view the protected content on this page.",
     })
   }
-  const { method, query: { id } } = req
+  const {
+    method,
+    query: { id },
+  } = req
   const invite = await prisma.campaignsOnUsers.findUnique({
     where: {
       id: <string>id,
@@ -25,7 +28,7 @@ export default async function protectedHandler(
   }
 
   switch (method) {
-    case 'PUT':
+    case "PUT":
       const invite = await prisma.campaignsOnUsers.update({
         where: {
           id: <string>id,
@@ -37,7 +40,7 @@ export default async function protectedHandler(
       res.statusCode = 200
       res.json({ invite })
       return
-    case 'DELETE':
+    case "DELETE":
       await prisma.campaignsOnUsers.delete({
         where: {
           id: <string>id,
@@ -46,7 +49,7 @@ export default async function protectedHandler(
       res.status(200).send("")
       return
     default:
-      res.setHeader('Allow', ['PUT', 'DELETE'])
+      res.setHeader("Allow", ["PUT", "DELETE"])
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }

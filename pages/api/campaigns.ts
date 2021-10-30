@@ -23,18 +23,22 @@ export default async function protectedHandler(
   }
   const { method } = req
   switch (method) {
-    case 'POST':
-      const { body: { name, invites } } = req
-      const users = invites.map((email) => {
-        return {
-          admin: false,
-          userEmail: email,
-        }
-      }).concat({
-        admin: true,
-        accepted: new Date(),
-        userEmail: <string>user.email,
-      })
+    case "POST":
+      const {
+        body: { name, invites },
+      } = req
+      const users = invites
+        .map((email) => {
+          return {
+            admin: false,
+            userEmail: email,
+          }
+        })
+        .concat({
+          admin: true,
+          accepted: new Date(),
+          userEmail: <string>user.email,
+        })
       const newCampaign = await prisma.campaign.create({
         data: {
           name: name,
@@ -54,8 +58,10 @@ export default async function protectedHandler(
       res.statusCode = 201
       res.json({ campaign: newCampaign })
       break
-    case 'DELETE':
-      const { body: { id } } = req
+    case "DELETE":
+      const {
+        body: { id },
+      } = req
       const campaignToDelete = await prisma.campaign.findMany({
         where: {
           id: id,
@@ -68,7 +74,7 @@ export default async function protectedHandler(
         },
         select: {
           id: true,
-        }
+        },
       })
       if (campaignToDelete.length != 1) {
         return res.status(403).end(`Access Denied`)
@@ -80,9 +86,9 @@ export default async function protectedHandler(
       })
       res.statusCode = 200
       res.json({ campaign: { id } })
-      break;
+      break
     default:
-      res.setHeader('Allow', ['GET', 'PUT'])
+      res.setHeader("Allow", ["GET", "PUT"])
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }

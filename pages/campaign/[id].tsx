@@ -6,56 +6,60 @@ import prisma from "lib/prisma"
 import { useState } from "react"
 import ManagePlayersModal from "components/manage_players_modal"
 import Encounters from "components/campaign/encounters"
-import { CogIcon } from '@heroicons/react/outline'
+import { CogIcon } from "@heroicons/react/outline"
 
 export default function Page(props) {
   const { data: session } = useSession()
   const [campaign, setCampaign] = useState(props.campaign)
-  const [managePlayersModal , setManagePlayersModal] = useState(false)
+  const [managePlayersModal, setManagePlayersModal] = useState(false)
 
-  if(!session) {
-    return <Layout>
-      Campaign not found
-    </Layout>
+  if (!session) {
+    return <Layout>Campaign not found</Layout>
   }
-  if(!props.campaign) {
-    return <Layout>
-      Campaign not found
-    </Layout>
+  if (!props.campaign) {
+    return <Layout>Campaign not found</Layout>
   }
 
   const addPlayer = async (campaign, invite) => {
     setCampaign({
       ...campaign,
-      ... {
+      ...{
         users: campaign.users.concat(invite),
-      }
+      },
     })
   }
 
   const removePlayer = async (campaign, invite) => {
     setCampaign({
       ...campaign,
-      ... {
-        users: campaign.users.filter((u) => u.id != invite.id)
-      }
+      ...{
+        users: campaign.users.filter((u) => u.id != invite.id),
+      },
     })
   }
 
   return (
     <Layout breadcrumbs={[{ text: campaign.name }]}>
       <div className="pb-4">
-        <h1 className="inline-block text-3xl mr-4">{ campaign.name }</h1>
-        <CogIcon className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black" onClick={() => setManagePlayersModal(true)}/>
+        <h1 className="inline-block text-3xl mr-4">{campaign.name}</h1>
+        <CogIcon
+          className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black"
+          onClick={() => setManagePlayersModal(true)}
+        />
       </div>
-      <Encounters userCampaign={props.userCampaign} encounters={props.encounters} campaign={props.campaign}/>
-      {
-      managePlayersModal && <ManagePlayersModal
+      <Encounters
+        userCampaign={props.userCampaign}
+        encounters={props.encounters}
+        campaign={props.campaign}
+      />
+      {managePlayersModal && (
+        <ManagePlayersModal
           campaign={campaign}
           hide={() => setManagePlayersModal(false)}
           addPlayer={addPlayer}
-          removePlayer={removePlayer}/>
-      }
+          removePlayer={removePlayer}
+        />
+      )}
     </Layout>
   )
 }
@@ -63,7 +67,7 @@ export default function Page(props) {
 export const getServerSideProps = async (context) => {
   const session = await getSession(context)
   if (!session) {
-    return {props: {}}
+    return { props: {} }
   }
   const campaign = await prisma.campaign.findFirst({
     where: {
@@ -86,19 +90,19 @@ export const getServerSideProps = async (context) => {
     },
   })
   if (!campaign) {
-    return {props: { session }}
+    return { props: { session } }
   }
-  const userCampaign = campaign && campaign.users.find((u) => u.userEmail == session?.user?.email)
+  const userCampaign =
+    campaign && campaign.users.find((u) => u.userEmail == session?.user?.email)
   const encounters = await prisma.encounter.findMany({
     where: {
       campaignId: campaign.id,
-      ... ( !userCampaign.admin && {
-          NOT: {
-            visibility: "DRAFT",
-          }
-        }
-      )
-    }
+      ...(!userCampaign.admin && {
+        NOT: {
+          visibility: "DRAFT",
+        },
+      }),
+    },
   })
   return {
     props: {

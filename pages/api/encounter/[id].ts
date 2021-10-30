@@ -22,7 +22,10 @@ export default async function protectedHandler(
     res.status(403).end("")
     return
   }
-  const { method, query: { id } } = req
+  const {
+    method,
+    query: { id },
+  } = req
   const campaign = await prisma.campaign.findFirst({
     where: {
       id: <string>id,
@@ -38,7 +41,7 @@ export default async function protectedHandler(
     },
     select: {
       id: true,
-    }
+    },
   })
   if (!campaign) {
     res.status(404).end("")
@@ -46,7 +49,7 @@ export default async function protectedHandler(
   }
 
   switch (method) {
-    case 'POST':
+    case "POST":
       const encounter = await prisma.encounter.create({
         data: {
           campaignId: campaign.id,
@@ -56,17 +59,17 @@ export default async function protectedHandler(
       })
       res.statusCode = 200
       res.json({ encounter })
-      break;
-    case 'DELETE':
+      break
+    case "DELETE":
       await prisma.encounter.delete({
         where: {
           id: req.body.encounterId,
         },
       })
       res.status(200).send("")
-      break;
+      break
     default:
-      res.setHeader('Allow', ['GET', 'PUT'])
+      res.setHeader("Allow", ["GET", "PUT"])
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }
