@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react"
+import { ChevronRightIcon } from "@heroicons/react/outline"
 
 export default function Header({ breadcrumbs }) {
   const { data: session, status } = useSession()
@@ -22,26 +23,31 @@ export default function Header({ breadcrumbs }) {
             </Link>
             <div className="sm:flex hidden">
               {breadcrumbs &&
-                breadcrumbs.map((breadcrumb, i) => {
-                  if (!!breadcrumb.url) {
-                    return (
-                      <Link key={i} href={breadcrumb.url}>
-                        <a className="mr-4 truncate text-base font-medium text-gray-500 hover:text-gray-900">
+                breadcrumbs.map((breadcrumb, i) =>
+                  <>
+                    {
+                      (!!breadcrumb.url) ? (
+                        <Link key={i} href={breadcrumb.url}>
+                          <a className="truncate text-base font-medium text-gray-500 hover:text-gray-900">
+                            {breadcrumb.text}
+                          </a>
+                        </Link>
+                      ) : (
+                        <span
+                          key={i}
+                          className="truncate text-base font-medium text-gray-500"
+                        >
                           {breadcrumb.text}
-                        </a>
-                      </Link>
-                    )
-                  } else {
-                    return (
-                      <span
-                        key={i}
-                        className="mr-4 truncate text-base font-medium text-gray-500"
-                      >
-                        {breadcrumb.text}
+                        </span>
+                      )
+                    }
+                    { (i < breadcrumbs.length -1) && (
+                      <span className="align-middle">
+                        <ChevronRightIcon className="w-4 h-6 text-gray-500"/>
                       </span>
-                    )
-                  }
-                })}
+                    )}
+                  </>
+                )}
             </div>
           </nav>
           <div className="flex items-center justify-end flex-1">
