@@ -25,31 +25,26 @@ export default function Header({ breadcrumbs }) {
             </Link>
             <div className="sm:flex hidden space-x-1">
               {breadcrumbs &&
-                breadcrumbs.map((breadcrumb, i) =>
+                breadcrumbs.map((breadcrumb, i) => (
                   <>
-                    {
-                      (!!breadcrumb.url) ? (
-                        <Link key={i} href={breadcrumb.url}>
-                          <a className="truncate text-base font-medium text-gray-500 hover:text-gray-900">
-                            {breadcrumb.text}
-                          </a>
-                        </Link>
-                      ) : (
-                        <span
-                          key={i}
-                          className="truncate text-base font-medium"
-                        >
+                    {!!breadcrumb.url ? (
+                      <Link key={i} href={breadcrumb.url}>
+                        <a className="truncate text-base font-medium text-gray-500 hover:text-gray-900">
                           {breadcrumb.text}
-                        </span>
-                      )
-                    }
-                    { (i < breadcrumbs.length -1) && (
+                        </a>
+                      </Link>
+                    ) : (
+                      <span key={i} className="truncate text-base font-medium">
+                        {breadcrumb.text}
+                      </span>
+                    )}
+                    {i < breadcrumbs.length - 1 && (
                       <span className="align-middle">
-                        <ChevronRightIcon className="w-4 h-6 text-gray-500"/>
+                        <ChevronRightIcon className="w-4 h-6 text-gray-500" />
                       </span>
                     )}
                   </>
-                )}
+                ))}
             </div>
           </nav>
           <div className="flex items-center justify-end flex-1">
@@ -73,8 +68,8 @@ export default function Header({ breadcrumbs }) {
                   <div className="sm:flex hidden w-11 h-11 mr-2 relative">
                     <Image
                       className="rounded-full"
-                      objectFit='contain'
-                      layout='fill'
+                      objectFit="contain"
+                      layout="fill"
                       alt="player icon"
                       src={session.user.image}
                     />

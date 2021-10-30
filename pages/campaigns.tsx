@@ -146,15 +146,17 @@ export default function Page(props) {
                   {campaign.users
                     .filter((campaignUser) => !!campaignUser.accepted)
                     .map(({ user }) => (
-                      <div className="relative inline-block align-middle w-8 h-8 mr-2">
+                      <div
+                        key={user.id}
+                        className="relative inline-block align-middle w-8 h-8 mr-2"
+                      >
                         <Image
                           className="rounded-full"
-                          objectFit='contain'
+                          objectFit="contain"
                           layout="fill"
                           alt="player icon"
                           key={campaign.id + user.id}
                           src={user.image}
-                          className="rounded-full"
                         />
                       </div>
                     ))}
@@ -201,15 +203,17 @@ export default function Page(props) {
                   {invite.campaign.users
                     .filter((campaignUser) => !!campaignUser.accepted)
                     .map(({ user }) => (
-                      <div className="relative inline-block align-middle w-8 h-8 mr-2">
+                      <div
+                        key={user.id}
+                        className="relative inline-block align-middle w-8 h-8 mr-2"
+                      >
                         <Image
                           className="rounded-full"
-                          objectFit='contain'
+                          objectFit="contain"
                           layout="fill"
                           alt="player icon"
-                          key={campaign.id + user.id}
+                          key={invite.campaign.id + user.id}
                           src={user.image}
-                          className="rounded-full"
                         />
                       </div>
                     ))}

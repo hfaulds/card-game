@@ -40,22 +40,32 @@ export default function Page(props) {
     <Layout breadcrumbs={[{ text: campaign.name }]}>
       <div className="border-b-2 border-gray-100 pb-6 mb-8">
         <h1 className="inline-block text-3xl mr-10">{campaign.name}</h1>
-        <span onClick={() => setTab("encounters")} className={`mr-10 font-medium ${tab != "encounters" && "text-gray-500 hover:text-gray-900"}`}>
+        <span
+          onClick={() => setTab("encounters")}
+          className={`mr-10 font-medium ${
+            tab != "encounters" && "text-gray-500 hover:text-gray-900"
+          }`}
+        >
           Encounters
         </span>
-        <span onClick={() => setTab("players")} className={`font-medium ${tab != "players" && "text-gray-500 hover:text-gray-900"}`}>
+        <span
+          onClick={() => setTab("players")}
+          className={`font-medium ${
+            tab != "players" && "text-gray-500 hover:text-gray-900"
+          }`}
+        >
           Players
         </span>
       </div>
-      { (tab == "encounters" && (
+      {tab == "encounters" && (
         <Encounters
           userCampaign={props.userCampaign}
           encounters={props.encounters}
           campaign={props.campaign}
         />
-      ))}
+      )}
 
-      { (tab == "players" && (campaign.users.map(({user}) => user.name)))}
+      {tab == "players" && campaign.users.map(({ user }) => user.name)}
     </Layout>
   )
 }
@@ -93,7 +103,7 @@ export const getServerSideProps = async (context) => {
   const encounters = await prisma.encounter.findMany({
     where: {
       campaignId: campaign.id,
-      ...(!userCampaign.admin && {
+      ...(!userCampaign?.admin && {
         NOT: {
           visibility: "DRAFT",
         },
