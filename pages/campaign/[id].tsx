@@ -5,6 +5,7 @@ import Layout from "components/layout"
 import prisma from "lib/prisma"
 import { useState } from "react"
 import Encounters from "components/campaign/encounters"
+import Players from "components/campaign/players"
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -16,24 +17,6 @@ export default function Page(props) {
   }
   if (!props.campaign) {
     return <Layout>Campaign not found</Layout>
-  }
-
-  const addPlayer = async (campaign, invite) => {
-    setCampaign({
-      ...campaign,
-      ...{
-        users: campaign.users.concat(invite),
-      },
-    })
-  }
-
-  const removePlayer = async (campaign, invite) => {
-    setCampaign({
-      ...campaign,
-      ...{
-        users: campaign.users.filter((u) => u.id != invite.id),
-      },
-    })
   }
 
   return (
@@ -65,10 +48,12 @@ export default function Page(props) {
         />
       )}
 
-      {tab == "players" &&
-        campaign.users
-          .filter((campaignUser) => !!campaignUser.accepted)
-          .map(({ user }) => user.name)}
+      {tab == "players" && (
+        <Players
+          campaign={props.campaign}
+          userCampaign={props.userCampaign}
+        />
+      )}
     </Layout>
   )
 }
