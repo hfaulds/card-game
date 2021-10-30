@@ -15,7 +15,7 @@ export default async function protectedHandler(
   }
   const user = await prisma.user.findUnique({
     where: {
-      email: <string>session?.user?.email,
+      email: session?.user?.email as string,
     },
   })
   if (!user) {
@@ -37,7 +37,7 @@ export default async function protectedHandler(
         .concat({
           admin: true,
           accepted: new Date(),
-          userEmail: <string>user.email,
+          userEmail: user.email as string,
         })
       const newCampaign = await prisma.campaign.create({
         data: {
@@ -68,7 +68,7 @@ export default async function protectedHandler(
           users: {
             some: {
               admin: true,
-              userEmail: <string>user.email,
+              userEmail: user.email as string,
             },
           },
         },

@@ -15,7 +15,7 @@ export default async function protectedHandler(
   }
   const currentUser = await prisma.user.findUnique({
     where: {
-      email: <string>session?.user?.email,
+      email: session?.user?.email as string,
     },
   })
   if (!currentUser) {
@@ -28,11 +28,11 @@ export default async function protectedHandler(
   } = req
   const campaign = await prisma.campaign.findFirst({
     where: {
-      id: <string>id,
+      id: id as string,
       users: {
         some: {
           admin: true,
-          userEmail: <string>currentUser.email,
+          userEmail: currentUser.email as string,
           accepted: {
             not: null,
           },

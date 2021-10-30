@@ -19,7 +19,7 @@ export default async function protectedHandler(
   } = req
   const invite = await prisma.campaignsOnUsers.findUnique({
     where: {
-      id: <string>id,
+      id: id as string,
     },
   })
   if (!invite || invite.userEmail != session?.user?.email) {
@@ -31,7 +31,7 @@ export default async function protectedHandler(
     case "PUT":
       const invite = await prisma.campaignsOnUsers.update({
         where: {
-          id: <string>id,
+          id: id as string,
         },
         data: {
           accepted: new Date(),
@@ -43,7 +43,7 @@ export default async function protectedHandler(
     case "DELETE":
       await prisma.campaignsOnUsers.delete({
         where: {
-          id: <string>id,
+          id: id as string,
         },
       })
       res.status(200).send("")

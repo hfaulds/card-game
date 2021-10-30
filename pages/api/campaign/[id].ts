@@ -28,11 +28,11 @@ export default async function protectedHandler(
   } = req
   const campaign = await prisma.campaign.findFirst({
     where: {
-      id: <string>id,
+      id: id as string,
       users: {
         some: {
           admin: true,
-          userEmail: <string>currentUser.email,
+          userEmail: currentUser.email as string,
           accepted: {
             not: null,
           },
@@ -56,7 +56,7 @@ export default async function protectedHandler(
       }
       const invite = await prisma.campaignsOnUsers.create({
         data: {
-          campaignId: <string>id,
+          campaignId: id as string,
           admin: false,
           userEmail: req.body.email,
         },
