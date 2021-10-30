@@ -12,7 +12,9 @@ export default function Header({ breadcrumbs }) {
         <div className="flex justify-between items-center border-b-2 border-gray-100 py-6 justify-start space-x-10">
           <div className="flex space-x-10">
             <Link href="/">
-              <a> Home </a>
+              <a className="text-base font-medium text-gray-500 hover:text-gray-900">
+                Home
+              </a>
             </Link>
           </div>
           <nav className="flex space-x-10">
@@ -21,7 +23,7 @@ export default function Header({ breadcrumbs }) {
                 Campaigns
               </a>
             </Link>
-            <div className="sm:flex hidden">
+            <div className="sm:flex hidden space-x-1">
               {breadcrumbs &&
                 breadcrumbs.map((breadcrumb, i) =>
                   <>
@@ -35,7 +37,7 @@ export default function Header({ breadcrumbs }) {
                       ) : (
                         <span
                           key={i}
-                          className="truncate text-base font-medium text-gray-500"
+                          className="truncate text-base font-medium"
                         >
                           {breadcrumb.text}
                         </span>

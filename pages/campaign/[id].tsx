@@ -4,14 +4,12 @@ import { useSession, getSession } from "next-auth/react"
 import Layout from "components/layout"
 import prisma from "lib/prisma"
 import { useState } from "react"
-import ManagePlayersModal from "components/manage_players_modal"
 import Encounters from "components/campaign/encounters"
-import { CogIcon } from "@heroicons/react/outline"
 
 export default function Page(props) {
   const { data: session } = useSession()
   const [campaign, setCampaign] = useState(props.campaign)
-  const [managePlayersModal, setManagePlayersModal] = useState(false)
+  const [tab, setTab] = useState("encounters")
 
   if (!session) {
     return <Layout>Campaign not found</Layout>
@@ -40,26 +38,24 @@ export default function Page(props) {
 
   return (
     <Layout breadcrumbs={[{ text: campaign.name }]}>
-      <div className="pb-4">
-        <h1 className="inline-block text-3xl mr-4">{campaign.name}</h1>
-        <CogIcon
-          className="inline-block w-8 h-8 stroke-1 text-gray-400 hover:text-black"
-          onClick={() => setManagePlayersModal(true)}
-        />
+      <div className="border-b-2 border-gray-100 pb-6 mb-8">
+        <h1 className="inline-block text-3xl mr-10">{campaign.name}</h1>
+        <span onClick={() => setTab("encounters")} className={`mr-10 font-medium ${tab != "encounters" && "text-gray-500 hover:text-gray-900"}`}>
+          Encounters
+        </span>
+        <span onClick={() => setTab("players")} className={`font-medium ${tab != "players" && "text-gray-500 hover:text-gray-900"}`}>
+          Players
+        </span>
       </div>
-      <Encounters
-        userCampaign={props.userCampaign}
-        encounters={props.encounters}
-        campaign={props.campaign}
-      />
-      {managePlayersModal && (
-        <ManagePlayersModal
-          campaign={campaign}
-          hide={() => setManagePlayersModal(false)}
-          addPlayer={addPlayer}
-          removePlayer={removePlayer}
+      { (tab == "encounters" && (
+        <Encounters
+          userCampaign={props.userCampaign}
+          encounters={props.encounters}
+          campaign={props.campaign}
         />
-      )}
+      ))}
+
+      { (tab == "players" && (campaign.users.map(({user}) => user.name)))}
     </Layout>
   )
 }
