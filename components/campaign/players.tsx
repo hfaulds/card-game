@@ -27,7 +27,7 @@ export default function Players(props) {
   }
 
   return props.campaign.users
-    .filter((campaignUser) => !!campaignUser.accepted)
+    .filter((userCampaign) => !!userCampaign.accepted)
     .map((userCampaign) => {
       const user = userCampaign.user
       const userCards = state.users[userCampaign.id]?.cards || []
@@ -42,12 +42,16 @@ export default function Players(props) {
               <div>{card.name}</div>
               <div>{userCards[card.id] || 0}</div>
 
-              <div
-                onClick={() => addCard(userCampaign, card)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <PlusCircleIcon className="block w-6 h-6 stroke-1" />
-              </div>
+              {
+                (props.currentUserCampaign.admin || props.currentUserCampaign == userCampaign) && (
+                  <div
+                    onClick={() => addCard(userCampaign, card)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <PlusCircleIcon className="block w-6 h-6 stroke-1" />
+                  </div>
+                )
+              }
             </div>
           ))}
         </div>
