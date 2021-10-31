@@ -17,7 +17,7 @@ export default function ManagePlayersModal(props) {
     if (campaign.users.map((invite) => invite.userEmail).includes(email)) {
       return
     }
-    const res = await fetch(`/api/campaign/${campaign.id}`, {
+    const res = await fetch(`/api/campaign/${campaign.id}/invite`, {
       body: JSON.stringify({ email }),
       headers: {
         "Content-Type": "application/json",
@@ -32,7 +32,7 @@ export default function ManagePlayersModal(props) {
   }
 
   const removePlayer = async (invite) => {
-    const res = await fetch(`/api/campaign/${campaign.id}`, {
+    const res = await fetch(`/api/campaign/${campaign.id}/invite`, {
       body: JSON.stringify({ inviteId: invite.id }),
       headers: {
         "Content-Type": "application/json",

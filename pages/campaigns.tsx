@@ -40,7 +40,7 @@ export default function Page(props) {
   }
 
   const createCampaign = async (name, invites) => {
-    const res = await fetch("api/campaigns", {
+    const res = await fetch("api/campaign", {
       body: JSON.stringify({ name, invites }),
       headers: {
         "Content-Type": "application/json",
@@ -93,7 +93,7 @@ export default function Page(props) {
   }
 
   const deleteCampaign = async ({ id }) => {
-    const res = await fetch("api/campaigns", {
+    const res = await fetch("api/campaign", {
       body: JSON.stringify({ id }),
       headers: {
         "Content-Type": "application/json",
