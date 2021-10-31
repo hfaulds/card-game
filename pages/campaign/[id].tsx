@@ -49,10 +49,7 @@ export default function Page(props) {
       )}
 
       {tab == "players" && (
-        <Players
-          campaign={props.campaign}
-          userCampaign={props.userCampaign}
-        />
+        <Players campaign={props.campaign} userCampaign={props.userCampaign} />
       )}
     </Layout>
   )

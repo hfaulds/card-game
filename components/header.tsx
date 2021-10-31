@@ -9,7 +9,7 @@ export default function Header({ breadcrumbs }) {
   return (
     <header>
       <div className="mb-6">
-        <div className="flex justify-between items-center border-b-2 border-gray-100 py-6 justify-start space-x-10">
+        <div className="flex items-center border-b-2 border-gray-100 py-6 space-x-5">
           <div className="flex space-x-10">
             <Link href="/">
               <a className="text-base font-medium text-gray-500 hover:text-gray-900">
@@ -17,37 +17,36 @@ export default function Header({ breadcrumbs }) {
               </a>
             </Link>
           </div>
-          <nav className="flex space-x-10">
+          <nav className="flex flex-grow space-x-1 truncate">
             <Link href="/campaigns">
               <a className="text-base font-medium text-gray-500 hover:text-gray-900">
                 Campaigns
               </a>
             </Link>
-            <div className="sm:flex hidden space-x-1">
-              {breadcrumbs &&
-                breadcrumbs.map((breadcrumb, i) => (
-                  <>
-                    {!!breadcrumb.url ? (
-                      <Link key={i} href={breadcrumb.url}>
-                        <a className="truncate text-base font-medium text-gray-500 hover:text-gray-900">
-                          {breadcrumb.text}
-                        </a>
-                      </Link>
-                    ) : (
-                      <span key={i} className="truncate text-base font-medium">
-                        {breadcrumb.text}
-                      </span>
-                    )}
-                    {i < breadcrumbs.length - 1 && (
-                      <span className="align-middle">
-                        <ChevronRightIcon className="w-4 h-6 text-gray-500" />
-                      </span>
-                    )}
-                  </>
-                ))}
-            </div>
+            {breadcrumbs?.map((breadcrumb, i) => (
+              <>
+                <ChevronRightIcon
+                  key={`chevron-${i}`}
+                  className="sm:inline hidden w-4 h-6 text-gray-500"
+                />
+                {!!breadcrumb.url ? (
+                  <Link key={i} href={breadcrumb.url}>
+                    <a className="sm:inline hidden truncate text-base font-medium text-gray-500 hover:text-gray-900">
+                      {breadcrumb.text}
+                    </a>
+                  </Link>
+                ) : (
+                  <span
+                    key={i}
+                    className="sm:inline hidden truncate text-base font-medium"
+                  >
+                    {breadcrumb.text}
+                  </span>
+                )}
+              </>
+            ))}
           </nav>
-          <div className="flex items-center justify-end flex-1">
+          <div className="flex flex-none items-center">
             {!session && (
               <>
                 <a
