@@ -41,6 +41,7 @@ export default async function protectedHandler(
     },
     select: {
       id: true,
+      state: true,
     },
   })
   if (!campaign) {
@@ -54,7 +55,7 @@ export default async function protectedHandler(
         data: {
           campaignId: campaign.id,
           name: req.body.name,
-          state: {},
+          state: campaign.state || {},
         },
       })
       res.statusCode = 200

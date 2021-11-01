@@ -53,7 +53,7 @@ export default function Hand(props) {
             onMouseOver={() => setHover(card)}
             onMouseOut={() => setHover(null)}
           >
-            <p className="font-bold"> Card {card.id}</p>
+            <p className="font-bold">{card.name}</p>
             <p> adfasdfasdfasdf </p>
             <p> adfasdfasdfasdf </p>
             <p> adfasdfasdfasdf </p>
