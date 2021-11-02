@@ -8,7 +8,7 @@ import { useState } from "react"
 import Hand from "components/campaign/hand"
 import Modal from "components/modal"
 import { Cards } from "lib/cards"
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid"
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -28,11 +28,11 @@ export default function Page(props) {
   const playCard = () => {}
 
   const cards = Object.entries(
-    props.encounter.state.users[currentCampaignUser.id].cards,
+    props.encounter.state.users[currentCampaignUser.id].cards
   ).flatMap(([id, quantity]) => {
     let c: any[] = []
     let card = Cards.find((card) => card.id == id)
-    for (let i=0; i < (quantity as number); i++) {
+    for (let i = 0; i < (quantity as number); i++) {
       c.push({
         instanceId: uuidv4(),
         ...card,

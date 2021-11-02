@@ -17,7 +17,7 @@ export default async function protectedHandler(
   const {
     method,
     query: { id },
-    body: { cardId, quantity},
+    body: { cardId, quantity },
   } = req
   const currentUserCampaign = await prisma.campaignsOnUsers.findFirst({
     where: {
@@ -39,10 +39,11 @@ export default async function protectedHandler(
         res.status(403).send("")
         return
       }
-      await prisma.$executeRawUnsafe(`UPDATE Campaign
+      await prisma.$executeRawUnsafe(
+        `UPDATE Campaign
         SET state = JSON_MERGE_PATCH(state, '{"users":{"${currentUserCampaign?.id}":{"cards":{"${cardId}":${quantity}}}}}')
         WHERE id = ?;`,
-        currentUserCampaign?.campaignId,
+        currentUserCampaign?.campaignId
       )
       res.statusCode = 200
       res.send("")

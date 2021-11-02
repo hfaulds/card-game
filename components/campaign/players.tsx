@@ -59,18 +59,19 @@ export default function Players(props) {
               <div className="flex-none">{card.name}</div>
               <div className="flex-grow">{userCards[card.id] || 0}</div>
 
-              {
-                (props.currentUserCampaign.admin || props.currentUserCampaign == userCampaign) && (
-                  <div className="flex flex-none justify-center">
-                    <PlusCircleIcon
+              {(props.currentUserCampaign.admin ||
+                props.currentUserCampaign == userCampaign) && (
+                <div className="flex flex-none justify-center">
+                  <PlusCircleIcon
                     onClick={() => addCard(userCampaign, card, 1)}
-                    className="inline-block text-gray-400 hover:text-gray-600 w-6 h-6" />
-                    <MinusCircleIcon
+                    className="inline-block text-gray-400 hover:text-gray-600 w-6 h-6"
+                  />
+                  <MinusCircleIcon
                     onClick={() => addCard(userCampaign, card, -1)}
-                    className="inline-block text-gray-400 hover:text-gray-600 w-6 h-6" />
-                  </div>
-                )
-              }
+                    className="inline-block text-gray-400 hover:text-gray-600 w-6 h-6"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
