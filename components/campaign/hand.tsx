@@ -1,18 +1,13 @@
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 
 export default function Hand(props) {
   const [cards, setCards] = useState(props.cards)
-  const [hover, setHover] = useState(null)
+  const [hovered, setHover] = useState<any>(null)
   const [selected, setSelected] = useState<null | any>(null)
-  const [width, setWidth] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    window.addEventListener("resize", () =>
-      setWidth(ref?.current?.offsetWidth || 0)
-    )
-    setWidth(ref?.current?.offsetWidth || 0)
-  })
+  const hover = (card, i) => {
+    setHover({ ...card, pos: i })
+  }
 
   const select = (card, i) => {
     if (selected?.instanceId == card.instanceId) {
@@ -31,17 +26,18 @@ export default function Hand(props) {
       Math.floor(unselectedCards / 2) +
       (1 - (unselectedCards % 2)) * 0.5
     // distribute evenly across x axis
-    const x = relpos * (width / cards.length) * 0.8
+    // when hovered spread out a bit
+    const x = (relpos * 75) + (hovered && ((pos - hovered?.pos)))
     // find y position on curve
     // adjust x to raise curve
-    const y = Math.pow(x * 0.8, 2) / width
+    const y = Math.pow(x * 0.8, 2) / 1000
     // rotate to align with normal of curve
     const rot = Math.atan(y / x) * (180 / Math.PI)
     return { x, y, rot }
   }
 
   return (
-    <div ref={ref} className="w-8/12 mx-auto px-4 sm:px-6">
+    <div className="w-8/12 mx-auto px-4 sm:px-6">
       {cards.map((card, i) => {
         const { x, y, rot } = getTransform(i)
         return (
@@ -53,11 +49,9 @@ export default function Hand(props) {
               transformOrigin: "50%",
               transform: `translate(${x}px, ${y}px) rotate(${rot}deg)`,
               transition: "transform 200ms",
-              ...(hover == card && {
+              ...(hovered?.instanceId == card?.instanceId && {
                 zIndex: 1,
-                transform: `scale(1.1) translate(${x}px, ${
-                  y - 1.5
-                }px) rotate(${rot}deg)`,
+                transform: `scale(1.1) translate(${x}px, ${y}px) rotate(${rot}deg) translate(0, -2rem)`,
               }),
               ...(selected?.instanceId == card.instanceId && {
                 zIndex: 2,
@@ -65,7 +59,7 @@ export default function Hand(props) {
               }),
             }}
             onClick={() => select(card, i)}
-            onMouseOver={() => setHover(card)}
+            onMouseOver={() => hover(card, i)}
             onMouseOut={() => setHover(null)}
           >
             <p className="font-bold">{card.name}</p>
