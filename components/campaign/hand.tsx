@@ -27,8 +27,10 @@ export default function Hand(props) {
       (1 - (unselectedCards % 2)) * 0.5
     // distribute evenly across x axis
     // when hovered push nearby cards apart
-    const x = (relpos * 75) - (Math.pow(relpos, 3) * 0.75) +
-      (hovered && hovered?.pos != pos && (Math.pow(pos - hovered?.pos, -3) * 20))
+    const x =
+      relpos * 75 -
+      Math.pow(relpos, 3) * 0.75 +
+      (hovered && hovered?.pos != pos && Math.pow(pos - hovered?.pos, -3) * 20)
     //+ (hovered && Math.pow(2 * (pos - hovered?.pos), -2) * (pos - hovered?.pos) * 200)
     // find y position on curve
     // adjust x to raise curve
