@@ -26,12 +26,17 @@ export default function Hand(props) {
       Math.floor(unselectedCards / 2) +
       (1 - (unselectedCards % 2)) * 0.5
     // distribute evenly across x axis
-    // when hovered spread out a bit
-    const x = (relpos * 75) + (hovered && ((pos - hovered?.pos)))
+    // when hovered push nearby cards apart
+    const x = (relpos * 75) - (Math.pow(relpos, 3) * 0.75) +
+      (hovered && hovered?.pos != pos && (Math.pow(pos - hovered?.pos, -3) * 20))
+    //+ (hovered && Math.pow(2 * (pos - hovered?.pos), -2) * (pos - hovered?.pos) * 200)
     // find y position on curve
     // adjust x to raise curve
     const y = Math.pow(x * 0.8, 2) / 1000
     // rotate to align with normal of curve
+    if (x === 0) {
+      return { x, y, rot: 0 }
+    }
     const rot = Math.atan(y / x) * (180 / Math.PI)
     return { x, y, rot }
   }
@@ -51,7 +56,7 @@ export default function Hand(props) {
               transition: "transform 200ms",
               ...(hovered?.instanceId == card?.instanceId && {
                 zIndex: 1,
-                transform: `scale(1.1) translate(${x}px, ${y}px) rotate(${rot}deg) translate(0, -2rem)`,
+                transform: `scale(1.1) translate(${x}px, ${y}px) rotate(${rot}deg) translate(0, -50px)`,
               }),
               ...(selected?.instanceId == card.instanceId && {
                 zIndex: 2,
