@@ -31,7 +31,6 @@ export default function Hand(props) {
       relpos * 75 -
       Math.pow(relpos, 3) * 0.75 +
       (hovered && hovered?.pos != pos && Math.pow(pos - hovered?.pos, -3) * 20)
-    //+ (hovered && Math.pow(2 * (pos - hovered?.pos), -2) * (pos - hovered?.pos) * 200)
     // find y position on curve
     // adjust x to raise curve
     const y = Math.pow(x * 0.8, 2) / 1000
