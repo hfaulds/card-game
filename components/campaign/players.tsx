@@ -3,13 +3,12 @@ import { PlusCircleIcon, MinusCircleIcon } from "@heroicons/react/outline"
 import { Cards } from "lib/cards"
 
 export default function Players(props) {
-  const [state, setState] = useState({
-    users: [],
-    ...props.campaign.state,
+  const [decks, setDecks] = useState({
+    ...(props.campaign.state.decks || {}),
   })
 
   const addCard = async (userCampaign, card, quantity) => {
-    const oldCards = state.users[userCampaign.id]?.cards || {}
+    const oldCards = decks[userCampaign.id] || {}
     const newCount = (oldCards[card.id] || 0) + quantity
     if (newCount < 0) {
       return
@@ -28,18 +27,11 @@ export default function Players(props) {
     if (!res.ok) {
       return
     }
-    setState({
-      ...state,
-      ...{
-        users: {
-          ...state.users,
-          [userCampaign.id]: {
-            cards: {
-              ...oldCards,
-              [card.id]: newCount,
-            },
-          },
-        },
+    setDecks({
+      ...decks,
+      [userCampaign.id]: {
+        ...oldCards,
+        [card.id]: newCount,
       },
     })
   }
@@ -48,7 +40,7 @@ export default function Players(props) {
     .filter((userCampaign) => !!userCampaign.accepted)
     .map((userCampaign) => {
       const user = userCampaign.user
-      const userCards = state.users[userCampaign.id]?.cards || []
+      const userCards = decks[userCampaign.id] || {}
       return (
         <div key={userCampaign.id} className="flex flex-wrap space-x-5">
           <div className="">{user.name}</div>

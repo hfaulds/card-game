@@ -1,4 +1,9 @@
-export const Cards = [
+export interface Card {
+  id: string
+  name: string
+}
+
+export const Cards: Card[] = [
   { id: "0", name: "lorem" },
   { id: "1", name: "ipsum" },
   { id: "2", name: "dolor" },

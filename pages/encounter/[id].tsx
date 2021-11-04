@@ -8,32 +8,25 @@ import { useState, useRef } from "react"
 import Hand from "components/campaign/hand"
 import Modal from "components/modal"
 import { Cards } from "lib/cards"
+import { GameState } from "lib/game_state"
 import { v4 as uuidv4 } from "uuid"
-
-interface GameState {
-  users: {
-    [key: string]: {
-      cards: {
-        [key: string]: number
-      }
-      token?: {
-        color: string
-        lastPos?: {
-          x: number
-          y: number
-        }
-        pos?: {
-          x: number
-          y: number
-        }
-      }
-    }
-  }
-}
 
 interface VisualState {
   mode: string
-  cursor?: { x: number; y: number }
+  cursor?: {
+    pos?: {
+      x: number
+      y: number
+    }
+    color: string
+  }
+  cursorLastPos?: {
+    pos: {
+      x: number
+      y: number
+    }
+    color: string
+  }
   userCampaignId?: string
 }
 
@@ -59,30 +52,19 @@ export default function Page(props) {
   const endTurn = () => {}
   const playCard = () => {}
 
-  const cards = Object.entries(
-    gameState.users[currentCampaignUser.id].cards
-  ).flatMap(([id, quantity]) => {
-    let c: any[] = []
-    let card = Cards.find((card) => card.id == id)
-    for (let i = 0; i < quantity; i++) {
-      c.push({
-        instanceId: uuidv4(),
-        ...card,
-      })
-    }
-    return c
-  })
-
   const mouseMove = (e) => {
-    if (visualState.mode == "PLACING") {
+    if (visualState.mode == "PLACING" && visualState.cursor) {
       const rect = ref!.current!.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
       setVisualState({
         ...visualState,
         cursor: {
-          x: x - (x % 21),
-          y: y - (y % 21),
+          ...visualState.cursor,
+          pos: {
+            x: x - (x % 21),
+            y: y - (y % 21),
+          },
         },
       })
     }
@@ -91,7 +73,11 @@ export default function Page(props) {
   const onClick = () => {
     if (visualState.mode == "PLACING") {
       if (visualState.userCampaignId) {
-        placePlayer(visualState.userCampaignId, visualState.cursor)
+        updateToken(visualState.userCampaignId, {
+          ...gameState.tokens[visualState.userCampaignId],
+          pos: visualState.cursor?.pos,
+          color: visualState.cursor?.color,
+        })
         setVisualState({ mode: "DEFAULT" })
       }
     }
@@ -99,36 +85,33 @@ export default function Page(props) {
 
   const selectPlayerTokenColor = (userCampaignId, color) => {
     updateToken(userCampaignId, {
-      ...gameState.users[userCampaignId]?.token,
+      ...gameState.tokens[userCampaignId],
       color,
     })
   }
 
   const startPlacing = (userCampaignId) => {
-    setVisualState({ mode: "PLACING", userCampaignId: userCampaignId })
-    setGameState({
-      ...gameState,
-      ...{
-        users: {
-          ...gameState.users,
-          [userCampaignId]: {
-            ...gameState.users[userCampaignId],
-            token: {
-              ...gameState.users[userCampaignId]?.token,
-              lastPos: gameState.users[userCampaignId]?.token?.pos,
-              pos: undefined,
-            },
-          },
-        },
+    const token = gameState.tokens[userCampaignId]
+    setVisualState({
+      mode: "PLACING",
+      userCampaignId: userCampaignId,
+      cursorLastPos: token?.pos && {
+        pos: token.pos,
+        color: token.color,
+      },
+      cursor: {
+        color: token.color,
       },
     })
-  }
-
-  const placePlayer = (userCampaignId, pos) => {
-    updateToken(userCampaignId, {
-      ...gameState.users[userCampaignId]?.token,
-      lastPos: undefined,
-      pos,
+    setGameState({
+      ...gameState,
+      tokens: {
+        ...gameState.tokens,
+        [userCampaignId]: {
+          ...token,
+          pos: undefined,
+        },
+      },
     })
   }
 
@@ -146,14 +129,9 @@ export default function Page(props) {
     })
     setGameState({
       ...gameState,
-      ...{
-        users: {
-          ...gameState.users,
-          [userCampaignId]: {
-            ...gameState.users[userCampaignId],
-            token,
-          },
-        },
+      tokens: {
+        ...gameState.tokens,
+        [userCampaignId]: token,
       },
     })
   }
@@ -198,20 +176,23 @@ export default function Page(props) {
         >
           <div className="flex-none w-30"></div>
           <div className="flex-grow">
-            {visualState.mode == "PLACING" && visualState.cursor && (
+            {visualState.mode == "PLACING" && visualState?.cursor?.pos && (
               <div
                 style={{
                   position: "absolute",
                   width: "21px",
                   height: "21px",
                   backgroundColor: "grey",
-                  transform: `translate(${visualState.cursor.x}px, ${visualState.cursor.y}px)`,
+                  transform: `translate(${visualState.cursor.pos.x}px, ${visualState.cursor.pos.y}px)`,
                 }}
               />
             )}
-            {Object.entries(gameState.users)
-              .filter(([id, user]) => !!user.token?.pos)
-              .map(([id, user]) => (
+            {gameState.players.map((id) => {
+              const token = gameState.tokens[id]
+              if (!token.pos) {
+                return <></>
+              }
+              return (
                 <div
                   key={id}
                   onClick={() => startPlacing(id)}
@@ -219,26 +200,24 @@ export default function Page(props) {
                     position: "absolute",
                     width: "21px",
                     height: "21px",
-                    backgroundColor: user.token?.color,
-                    transform: `translate(${user.token?.pos?.x}px, ${user.token?.pos?.y}px)`,
+                    backgroundColor: token.color,
+                    transform: `translate(${token.pos?.x}px, ${token.pos?.y}px)`,
                   }}
                 />
-              ))}
-            {Object.entries(gameState.users)
-              .filter(([id, user]) => !!user.token?.lastPos)
-              .map(([id, user]) => (
-                <div
-                  key={id}
-                  style={{
-                    position: "absolute",
-                    width: "21px",
-                    height: "21px",
-                    opacity: "50%",
-                    backgroundColor: user.token?.color || "blue",
-                    transform: `translate(${user.token?.lastPos?.x}px, ${user.token?.lastPos?.y}px)`,
-                  }}
-                />
-              ))}
+              )
+            })}
+            {visualState.cursorLastPos && (
+              <div
+                style={{
+                  position: "absolute",
+                  width: "21px",
+                  height: "21px",
+                  opacity: "50%",
+                  backgroundColor: visualState?.cursorLastPos.color,
+                  transform: `translate(${visualState.cursorLastPos.pos.x}px, ${visualState.cursorLastPos.pos.y}px)`,
+                }}
+              />
+            )}
           </div>
           <div className="flex-none w-30">
             <div className="border-solid border-4 bg-white p-2">
@@ -259,7 +238,7 @@ export default function Page(props) {
                       onChange={(e) =>
                         selectPlayerTokenColor(userCampaign.id, e.target.value)
                       }
-                      value={gameState.users[userCampaign.id]?.token?.color}
+                      value={gameState.tokens[userCampaign.id]?.color}
                     >
                       {["Blue", "Green", "Red"].map((c, i) => (
                         <option key={i} value={c.toLowerCase()}>
@@ -286,7 +265,10 @@ export default function Page(props) {
         )}
       </Layout>
       <div className="fixed bottom-0 h-60 w-full text-center">
-        <Hand cards={cards} playCard={playCard} />
+        <Hand
+          cards={gameState.cards[currentCampaignUser.id].hand}
+          playCard={playCard}
+        />
       </div>
     </>
   )

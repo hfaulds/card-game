@@ -1,5 +1,6 @@
 import { getSession } from "next-auth/react"
 import type { NextApiRequest, NextApiResponse } from "next"
+import { NewGameState, GameState, Decks } from "lib/game_state"
 
 import prisma from "lib/prisma"
 
@@ -43,6 +44,7 @@ export default async function protectedHandler(
     select: {
       id: true,
       state: true,
+      users: true,
     },
   })
   if (!campaign) {
@@ -52,24 +54,28 @@ export default async function protectedHandler(
 
   switch (method) {
     case "POST":
+      const state = NewGameState(
+        campaign.users,
+        (campaign?.state as unknown as GameState).decks
+      )
       const encounter = await prisma.encounter.create({
         data: {
           campaignId: campaign.id,
           name: req.body.name,
-          state: campaign.state || {},
+          state: state as any,
         },
       })
       res.statusCode = 200
       res.json({ encounter })
       break
     case "PUT":
-      const { token, userCampaignId } = req.body
+      const { token, userCampaignId, encounterId } = req.body
       if (
         !(
           userCampaignId &&
-          token &&
-          typeof token.pos.x == "number" &&
-          typeof token.pos.y == "number"
+          encounterId &&
+          typeof token?.pos?.x == "number" &&
+          typeof token?.pos?.y == "number"
         )
       ) {
         res.status(422).send("")
@@ -89,9 +95,9 @@ export default async function protectedHandler(
       }
       await prisma.$executeRawUnsafe(
         `UPDATE Encounter
-        SET state = JSON_MERGE_PATCH(state, '{"users":{"${userCampaignId}":{"token":{"color":"${token.color}"${pos}}}}}')
+        SET state = JSON_MERGE_PATCH(state, '{"tokens":{"${userCampaignId}":{"color":"${token.color}"${pos}}}}')
         WHERE id = ?;`,
-        req.body.encounterId
+        encounterId
       )
       res.statusCode = 200
       res.send("")

@@ -42,7 +42,7 @@ export default async function protectedHandler(
     case "PUT":
       await prisma.$executeRawUnsafe(
         `UPDATE Campaign
-        SET state = JSON_MERGE_PATCH(state, '{"users":{"${userCampaignId}":{"cards":{"${cardId}":${quantity}}}}}')
+        SET state = JSON_MERGE_PATCH(state, '{"decks":{"${userCampaignId}":{"${cardId}":${quantity}}}}')
         WHERE id = ?;`,
         id
       )
