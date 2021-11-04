@@ -13,26 +13,27 @@ export default async function protectedHandler(
       error: "You must be sign in to view the protected content on this page.",
     })
   }
-  const currentUser = await prisma.user.findUnique({
-    where: {
-      email: session?.user?.email as string,
-    },
-  })
-  if (!currentUser) {
-    res.status(403).end("")
-    return
-  }
   const {
     method,
     query: { id },
   } = req
+  const currentUserCampaign = await prisma.campaignsOnUsers.findFirst({
+    where: {
+      campaignId: id as string,
+      userEmail: session?.user?.email as string,
+    },
+  })
+  if (!currentUserCampaign) {
+    res.status(403).end("")
+    return
+  }
   const campaign = await prisma.campaign.findFirst({
     where: {
       id: id as string,
       users: {
         some: {
           admin: true,
-          userEmail: currentUser.email as string,
+          userEmail: currentUserCampaign.userEmail,
           accepted: {
             not: null,
           },
@@ -61,6 +62,40 @@ export default async function protectedHandler(
       res.statusCode = 200
       res.json({ encounter })
       break
+    case "PUT":
+      const { token, userCampaignId } = req.body
+      if (
+        !(
+          userCampaignId &&
+          token &&
+          typeof token.pos.x == "number" &&
+          typeof token.pos.y == "number"
+        )
+      ) {
+        res.status(422).send("")
+        return
+      }
+      if (
+        !(
+          currentUserCampaign?.admin || currentUserCampaign.id == userCampaignId
+        )
+      ) {
+        res.status(403).send("")
+        return
+      }
+      let pos = ""
+      if (token.pos) {
+        pos = `,"pos":{"x":${token.pos.x},"y":${token.pos.y}}`
+      }
+      await prisma.$executeRawUnsafe(
+        `UPDATE Encounter
+        SET state = JSON_MERGE_PATCH(state, '{"users":{"${userCampaignId}":{"token":{"color":"${token.color}"${pos}}}}}')
+        WHERE id = ?;`,
+        req.body.encounterId
+      )
+      res.statusCode = 200
+      res.send("")
+      break
     case "DELETE":
       await prisma.encounter.delete({
         where: {
@@ -70,7 +105,7 @@ export default async function protectedHandler(
       res.status(200).send("")
       break
     default:
-      res.setHeader("Allow", ["GET", "PUT"])
+      res.setHeader("Allow", ["GET", "PUT", "DELETE"])
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }

@@ -98,20 +98,9 @@ export default function Page(props) {
   }
 
   const selectPlayerTokenColor = (userCampaignId, color) => {
-    setGameState({
-      ...gameState,
-      ...{
-        users: {
-          ...gameState.users,
-          [userCampaignId]: {
-            ...gameState.users[userCampaignId],
-            token: {
-              ...gameState.users[userCampaignId]?.token,
-              color,
-            },
-          },
-        },
-      },
+    updateToken(userCampaignId, {
+      ...gameState.users[userCampaignId]?.token,
+      color,
     })
   }
 
@@ -136,6 +125,25 @@ export default function Page(props) {
   }
 
   const placePlayer = (userCampaignId, pos) => {
+    updateToken(userCampaignId, {
+      ...gameState.users[userCampaignId]?.token,
+      lastPos: undefined,
+      pos,
+    })
+  }
+
+  const updateToken = async (userCampaignId, token) => {
+    const res = await fetch(`/api/encounter/${props.campaign.id}`, {
+      body: JSON.stringify({
+        userCampaignId,
+        encounterId: props.encounter.id,
+        token,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PUT",
+    })
     setGameState({
       ...gameState,
       ...{
@@ -143,11 +151,7 @@ export default function Page(props) {
           ...gameState.users,
           [userCampaignId]: {
             ...gameState.users[userCampaignId],
-            token: {
-              ...gameState.users[userCampaignId]?.token,
-              lastPos: undefined,
-              pos,
-            },
+            token,
           },
         },
       },
@@ -215,7 +219,7 @@ export default function Page(props) {
                     position: "absolute",
                     width: "21px",
                     height: "21px",
-                    backgroundColor: user.token?.color || "blue",
+                    backgroundColor: user.token?.color,
                     transform: `translate(${user.token?.pos?.x}px, ${user.token?.pos?.y}px)`,
                   }}
                 />
@@ -255,10 +259,13 @@ export default function Page(props) {
                       onChange={(e) =>
                         selectPlayerTokenColor(userCampaign.id, e.target.value)
                       }
+                      value={gameState.users[userCampaign.id]?.token?.color}
                     >
-                      <option value="blue">Blue</option>
-                      <option value="green">Green</option>
-                      <option value="red">Red</option>
+                      {["Blue", "Green", "Red"].map((c, i) => (
+                        <option key={i} value={c.toLowerCase()}>
+                          {c}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 ))}
