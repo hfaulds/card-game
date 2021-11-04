@@ -17,8 +17,15 @@ interface GameState {
         [key: string]: number
       }
       token?: {
-        x: number
-        y: number
+        color: string
+        lastPos?: {
+          x: number
+          y: number
+        }
+        pos?: {
+          x: number
+          y: number
+        }
       }
     }
   }
@@ -90,6 +97,24 @@ export default function Page(props) {
     }
   }
 
+  const selectPlayerTokenColor = (userCampaignId, color) => {
+    setGameState({
+      ...gameState,
+      ...{
+        users: {
+          ...gameState.users,
+          [userCampaignId]: {
+            ...gameState.users[userCampaignId],
+            token: {
+              ...gameState.users[userCampaignId]?.token,
+              color,
+            },
+          },
+        },
+      },
+    })
+  }
+
   const startPlacing = (userCampaignId) => {
     setVisualState({ mode: "PLACING", userCampaignId: userCampaignId })
     setGameState({
@@ -99,7 +124,11 @@ export default function Page(props) {
           ...gameState.users,
           [userCampaignId]: {
             ...gameState.users[userCampaignId],
-            token: undefined,
+            token: {
+              ...gameState.users[userCampaignId]?.token,
+              lastPos: gameState.users[userCampaignId]?.token?.pos,
+              pos: undefined,
+            },
           },
         },
       },
@@ -114,7 +143,11 @@ export default function Page(props) {
           ...gameState.users,
           [userCampaignId]: {
             ...gameState.users[userCampaignId],
-            token: pos,
+            token: {
+              ...gameState.users[userCampaignId]?.token,
+              lastPos: undefined,
+              pos,
+            },
           },
         },
       },
@@ -164,24 +197,41 @@ export default function Page(props) {
             {visualState.mode == "PLACING" && visualState.cursor && (
               <div
                 style={{
+                  position: "absolute",
                   width: "21px",
                   height: "21px",
-                  backgroundColor: "blue",
+                  backgroundColor: "grey",
                   transform: `translate(${visualState.cursor.x}px, ${visualState.cursor.y}px)`,
                 }}
               />
             )}
             {Object.entries(gameState.users)
-              .filter(([id, user]) => !!user.token)
+              .filter(([id, user]) => !!user.token?.pos)
               .map(([id, user]) => (
                 <div
                   key={id}
                   onClick={() => startPlacing(id)}
                   style={{
+                    position: "absolute",
                     width: "21px",
                     height: "21px",
-                    backgroundColor: "green",
-                    transform: `translate(${user.token?.x}px, ${user.token?.y}px)`,
+                    backgroundColor: user.token?.color || "blue",
+                    transform: `translate(${user.token?.pos?.x}px, ${user.token?.pos?.y}px)`,
+                  }}
+                />
+              ))}
+            {Object.entries(gameState.users)
+              .filter(([id, user]) => !!user.token?.lastPos)
+              .map(([id, user]) => (
+                <div
+                  key={id}
+                  style={{
+                    position: "absolute",
+                    width: "21px",
+                    height: "21px",
+                    opacity: "50%",
+                    backgroundColor: user.token?.color || "blue",
+                    transform: `translate(${user.token?.lastPos?.x}px, ${user.token?.lastPos?.y}px)`,
                   }}
                 />
               ))}
@@ -200,6 +250,16 @@ export default function Page(props) {
                     >
                       <span>Place</span>
                     </button>
+                    <select
+                      name="color"
+                      onChange={(e) =>
+                        selectPlayerTokenColor(userCampaign.id, e.target.value)
+                      }
+                    >
+                      <option value="blue">Blue</option>
+                      <option value="green">Green</option>
+                      <option value="red">Red</option>
+                    </select>
                   </div>
                 ))}
             </div>
