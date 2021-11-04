@@ -17,7 +17,7 @@ export default async function protectedHandler(
   const {
     method,
     query: { id },
-    body: { cardId, quantity },
+    body: { cardId, quantity, userCampaignId },
   } = req
   const currentUserCampaign = await prisma.campaignsOnUsers.findFirst({
     where: {
@@ -25,25 +25,26 @@ export default async function protectedHandler(
       userEmail: email,
     },
   })
-  if (!currentUserCampaign?.admin) {
+  if (
+    !(
+      currentUserCampaign?.admin ||
+      (currentUserCampaign && currentUserCampaign?.id == userCampaignId)
+    )
+  ) {
     res.status(403).send("")
+    return
+  }
+  if (typeof cardId !== "string" || typeof quantity !== "number") {
+    res.status(422).send("")
     return
   }
   switch (method) {
     case "PUT":
-      if (typeof cardId !== "string" || typeof quantity !== "number") {
-        res.status(422).send("")
-        return
-      }
-      if (!currentUserCampaign?.admin) {
-        res.status(403).send("")
-        return
-      }
       await prisma.$executeRawUnsafe(
         `UPDATE Campaign
-        SET state = JSON_MERGE_PATCH(state, '{"users":{"${currentUserCampaign?.id}":{"cards":{"${cardId}":${quantity}}}}}')
+        SET state = JSON_MERGE_PATCH(state, '{"users":{"${userCampaignId}":{"cards":{"${cardId}":${quantity}}}}}')
         WHERE id = ?;`,
-        currentUserCampaign?.campaignId
+        id
       )
       res.statusCode = 200
       res.send("")

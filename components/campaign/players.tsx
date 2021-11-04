@@ -16,6 +16,7 @@ export default function Players(props) {
     }
     const res = await fetch(`/api/campaign/${props.campaign.id}/cards`, {
       body: JSON.stringify({
+        userCampaignId: userCampaign.id,
         cardId: card.id,
         quantity: newCount,
       }),
