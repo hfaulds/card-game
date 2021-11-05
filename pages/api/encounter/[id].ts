@@ -44,7 +44,16 @@ export default async function protectedHandler(
     select: {
       id: true,
       state: true,
-      users: true,
+      users: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   })
   if (!campaign) {
@@ -56,7 +65,7 @@ export default async function protectedHandler(
     case "POST":
       const state = NewGameState(
         campaign.users,
-        (campaign?.state as unknown as GameState).decks
+        campaign.state && campaign.state["decks"],
       )
       const encounter = await prisma.encounter.create({
         data: {

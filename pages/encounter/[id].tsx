@@ -46,7 +46,7 @@ export default function Page(props) {
     return <Layout>Encounter not found</Layout>
   }
 
-  const currentCampaignUser = props.campaign.users.find(
+  const currentUserCampaign = props.campaign.users.find(
     (userCampaign) => userCampaign.userEmail == session?.user?.email
   )
   const endTurn = () => {}
@@ -187,7 +187,7 @@ export default function Page(props) {
                 }}
               />
             )}
-            {gameState.players.map((id) => {
+            {gameState.characters.map(({ id }) => {
               const token = gameState.tokens[id]
               if (!token.pos) {
                 return <></>
@@ -222,34 +222,34 @@ export default function Page(props) {
           <div className="flex-none w-30">
             <div className="border-solid border-4 bg-white p-2">
               <p className="font-bold mb-2"> Order </p>
-              {props.campaign.users
-                .filter((userCampaign) => !!userCampaign.accepted)
-                .map((userCampaign) => (
-                  <div key={userCampaign.user.id}>
-                    <span> {userCampaign.user.name} </span>
+              {gameState.characters.map((character, i) => (
+                <div key={character.id}>
+                  <span> {character.name} </span>
+                  {character.id == currentUserCampaign.id && (
                     <button
                       className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                      onClick={() => startPlacing(userCampaign.id)}
+                      onClick={() => startPlacing(character.id)}
                     >
                       <span>Place</span>
                     </button>
-                    <select
-                      name="color"
-                      onChange={(e) =>
-                        selectPlayerTokenColor(userCampaign.id, e.target.value)
-                      }
-                      value={gameState.tokens[userCampaign.id]?.color}
-                    >
-                      {["Blue", "Green", "Red"].map((c, i) => (
-                        <option key={i} value={c.toLowerCase()}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
+                  )}
+                  <select
+                    name="color"
+                    onChange={(e) =>
+                      selectPlayerTokenColor(character.id, e.target.value)
+                    }
+                    value={gameState.tokens[character.id]?.color}
+                  >
+                    {["Blue", "Green", "Red"].map((c, i) => (
+                      <option key={i} value={c.toLowerCase()}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
             </div>
-            {currentCampaignUser.admin && (
+            {currentUserCampaign.admin && (
               <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
                 <span className="font-small" onClick={endTurn}>
                   {" "}
@@ -266,7 +266,7 @@ export default function Page(props) {
       </Layout>
       <div className="fixed bottom-0 h-60 w-full text-center">
         <Hand
-          cards={gameState.cards[currentCampaignUser.id].hand}
+          cards={gameState.cards[currentUserCampaign.id].hand}
           playCard={playCard}
         />
       </div>
