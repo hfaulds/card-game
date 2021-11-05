@@ -36,10 +36,10 @@ export default function Hand(props) {
     const y = Math.pow(x * 0.8, 2) / 1000
     // rotate to align with normal of curve
     if (x === 0) {
-      return { x, y, rot: 0 }
+      return { x, y: y - 250, rot: 0 }
     }
     const rot = Math.atan(y / x) * (180 / Math.PI)
-    return { x, y, rot }
+    return { x, y: y - 250, rot }
   }
 
   return (
@@ -49,7 +49,7 @@ export default function Hand(props) {
         return (
           <div
             key={card.instanceId}
-            className="absolute inline-block border-solid border-4 bg-white shadow w-40 h-52 hover:border-gray-300"
+            className="select-none absolute inline-block border-solid border-4 bg-white shadow w-40 h-52 hover:border-gray-300"
             style={{
               marginLeft: "-5rem",
               transformOrigin: "50%",

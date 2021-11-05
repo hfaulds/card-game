@@ -9,21 +9,18 @@ import Hand from "components/campaign/hand"
 import Modal from "components/modal"
 import ColorPicker from "components/color_picker"
 import { Cards } from "lib/cards"
-import { GameState } from "lib/game_state"
 import { v4 as uuidv4 } from "uuid"
 import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
-import {
-  VisualActions,
-  VisualStateReducer,
-  VisualState,
-} from "lib/reducers/state"
+import { Actions, StateReducer, State } from "lib/reducers/state"
 
 export default function Page(props) {
   const { data: session } = useSession()
   const [manageCharacterModal, setManageCharacterModal] = useState(false)
-  const [gameState, setGameState] = useState<GameState>(props.encounter.state)
-  const [visualState, setVisualState] = useReducer(VisualStateReducer, {
-    mode: "DEFAULT",
+  const [{ gameState, visualState }, setState] = useReducer(StateReducer, {
+    gameState: props.encounter.state,
+    visualState: {
+      mode: "DEFAULT",
+    },
   })
   const ref = useRef<HTMLInputElement>(null)
 
@@ -44,46 +41,19 @@ export default function Page(props) {
     const rect = ref!.current!.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    setVisualState({ action: VisualActions.MoveMouse, value: { x, y } })
+    setState({ action: Actions.MoveMouse, value: { x, y } })
   }
 
   const placeToken = () => {
-    if (visualState.mode == "PLACING" && visualState.tokenId) {
-      const token = gameState.tokens[visualState.tokenId]
-      if (token?.pos != visualState.cursor?.pos) {
-        updateToken(visualState.tokenId, {
-          ...token,
-          pos: visualState.cursor?.pos,
-          color: visualState.cursor?.color,
-        })
-        setVisualState({ action: VisualActions.MouseUp })
-      }
-    }
+    setState({ action: Actions.FinishPlacing })
   }
 
   const selectPlayerTokenColor = (tokenId, color) => {
-    updateToken(tokenId, {
-      ...gameState.tokens[tokenId],
-      color,
-    })
+    setState({ action: Actions.UpdateTokenColor, value: { tokenId, color } })
   }
 
   const startPlacing = (tokenId) => {
-    const token = gameState.tokens[tokenId]
-    setVisualState({
-      action: VisualActions.MouseDown,
-      value: { tokenId, token },
-    })
-    setGameState({
-      ...gameState,
-      tokens: {
-        ...gameState.tokens,
-        [tokenId]: {
-          ...token,
-          pos: undefined,
-        },
-      },
-    })
+    setState({ action: Actions.StartPlacing, value: { tokenId } })
   }
 
   const updateToken = async (tokenId, token) => {
@@ -97,13 +67,6 @@ export default function Page(props) {
         "Content-Type": "application/json",
       },
       method: "PUT",
-    })
-    setGameState({
-      ...gameState,
-      tokens: {
-        ...gameState.tokens,
-        [tokenId]: token,
-      },
     })
   }
 
@@ -232,7 +195,7 @@ export default function Page(props) {
           <Modal hide={() => setManageCharacterModal(false)}>Hi</Modal>
         )}
       </Layout>
-      <div className="fixed bottom-0 h-60 w-full text-center">
+      <div className="fixed bottom-0 h-0 w-full text-center">
         <Hand
           cards={gameState.cards[currentUserCampaign.id].hand}
           playCard={playCard}

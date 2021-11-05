@@ -1,63 +1,119 @@
-export const VisualActions = {
+import { GameState } from "lib/game_state"
+
+export const Actions = {
   MoveMouse: "MoveMouse",
-  MouseUp: "MouseUp",
-  MouseDown: "MouseDown",
+  FinishPlacing: "FinishPlacing",
+  StartPlacing: "StartPlacing",
+  UpdateTokenColor: "UpdateTokenColor",
 }
 
-export interface VisualState {
-  mode: string
-  cursor?: {
-    pos?: {
-      x: number
-      y: number
+export interface State {
+  gameState: GameState
+  visualState: {
+    mode: string
+    cursor?: {
+      pos?: {
+        x: number
+        y: number
+      }
+      color: string
     }
-    color: string
-  }
-  lastCursor?: {
-    pos: {
-      x: number
-      y: number
+    lastCursor?: {
+      pos: {
+        x: number
+        y: number
+      }
+      color: string
     }
-    color: string
+    tokenId?: string
   }
-  tokenId?: string
 }
 
-export function VisualStateReducer(state: VisualState, event): VisualState {
+export function StateReducer(state: State, event): State {
+  const { gameState, visualState } = state
   switch (event.action) {
-    case VisualActions.MoveMouse:
-      if (!(state.mode == "PLACING" && state.cursor)) {
+    case Actions.MoveMouse:
+      if (!(visualState.mode == "PLACING" && visualState.cursor)) {
         return state
       }
       const { x, y } = event.value
       return {
-        ...state,
-        cursor: {
-          ...state.cursor,
-          pos: {
-            x: x - (x % 21),
-            y: y - (y % 21),
+        gameState,
+        visualState: {
+          ...visualState,
+          cursor: {
+            ...visualState.cursor,
+            pos: {
+              x: x - (x % 21),
+              y: y - (y % 21),
+            },
           },
         },
       }
-    case VisualActions.MouseUp:
-      if (!(state.mode == "PLACING" && state.tokenId)) {
+    case Actions.FinishPlacing:
+      if (
+        !(
+          visualState.mode == "PLACING" &&
+          visualState.tokenId &&
+          visualState.cursor?.pos
+        )
+      ) {
         return state
       }
-      return { mode: "DEFAULT" }
-    case VisualActions.MouseDown:
-      const { tokenId, token } = event.value
       return {
-        mode: "PLACING",
-        tokenId: tokenId,
-        lastCursor: token?.pos && {
-          pos: token.pos,
-          color: token.color,
+        gameState: {
+          ...gameState,
+          tokens: {
+            ...gameState.tokens,
+            [visualState.tokenId]: {
+              pos: visualState.cursor.pos,
+              color: visualState.cursor.color,
+            },
+          },
         },
-        cursor: {
-          color: token.color,
+        visualState: {
+          mode: "DEFAULT",
         },
       }
+    case Actions.StartPlacing:
+      const token = gameState.tokens[event.value.tokenId]
+      return {
+        gameState: {
+          ...gameState,
+          tokens: {
+            ...gameState.tokens,
+            [event.value.tokenId]: {
+              ...token,
+              pos: undefined,
+            },
+          },
+        },
+        visualState: {
+          mode: "PLACING",
+          tokenId: event.value.tokenId,
+          lastCursor: token?.pos && {
+            pos: token.pos,
+            color: token.color,
+          },
+          cursor: {
+            color: token.color,
+          },
+        },
+      }
+    case Actions.UpdateTokenColor:
+      return {
+        gameState: {
+          ...gameState,
+          tokens: {
+            ...gameState.tokens,
+            [event.value.tokenId]: {
+              ...gameState.tokens[event.value.tokenId],
+              color: event.value.color,
+            },
+          },
+        },
+        visualState,
+      }
   }
-  return { mode: "DEFAULT" }
+  return state
 }
