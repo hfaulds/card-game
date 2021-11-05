@@ -29,7 +29,7 @@ interface VisualState {
     }
     color: string
   }
-  userCampaignId?: string
+  tokenId?: string
 }
 
 export default function Page(props) {
@@ -72,11 +72,12 @@ export default function Page(props) {
     }
   }
 
-  const onClick = () => {
-    if (visualState.mode == "PLACING") {
-      if (visualState.userCampaignId) {
-        updateToken(visualState.userCampaignId, {
-          ...gameState.tokens[visualState.userCampaignId],
+  const placeToken = () => {
+    if (visualState.mode == "PLACING" && visualState.tokenId) {
+      const token = gameState.tokens[visualState.tokenId]
+      if (token?.pos != visualState.cursor?.pos) {
+        updateToken(visualState.tokenId, {
+          ...token,
           pos: visualState.cursor?.pos,
           color: visualState.cursor?.color,
         })
@@ -85,18 +86,18 @@ export default function Page(props) {
     }
   }
 
-  const selectPlayerTokenColor = (userCampaignId, color) => {
-    updateToken(userCampaignId, {
-      ...gameState.tokens[userCampaignId],
+  const selectPlayerTokenColor = (tokenId, color) => {
+    updateToken(tokenId, {
+      ...gameState.tokens[tokenId],
       color,
     })
   }
 
-  const startPlacing = (userCampaignId) => {
-    const token = gameState.tokens[userCampaignId]
+  const startPlacing = (tokenId) => {
+    const token = gameState.tokens[tokenId]
     setVisualState({
       mode: "PLACING",
-      userCampaignId: userCampaignId,
+      tokenId: tokenId,
       lastCursor: token?.pos && {
         pos: token.pos,
         color: token.color,
@@ -109,7 +110,7 @@ export default function Page(props) {
       ...gameState,
       tokens: {
         ...gameState.tokens,
-        [userCampaignId]: {
+        [tokenId]: {
           ...token,
           pos: undefined,
         },
@@ -117,10 +118,10 @@ export default function Page(props) {
     })
   }
 
-  const updateToken = async (userCampaignId, token) => {
+  const updateToken = async (tokenId, token) => {
     const res = await fetch(`/api/encounter/${props.campaign.id}`, {
       body: JSON.stringify({
-        userCampaignId,
+        tokenId,
         encounterId: props.encounter.id,
         token,
       }),
@@ -133,7 +134,7 @@ export default function Page(props) {
       ...gameState,
       tokens: {
         ...gameState.tokens,
-        [userCampaignId]: token,
+        [tokenId]: token,
       },
     })
   }
@@ -165,12 +166,13 @@ export default function Page(props) {
             backgroundSize: "21px 21px",
           }}
           onMouseMove={mouseMove}
-          onClick={onClick}
+          onMouseUp={placeToken}
         >
           <div className="flex-none w-30"></div>
           <div className="flex-grow">
             {visualState.mode == "PLACING" && visualState?.cursor?.pos && (
               <div
+                className="cursor-move"
                 style={{
                   position: "absolute",
                   width: "21px",
@@ -187,9 +189,9 @@ export default function Page(props) {
               }
               return (
                 <div
-                  className={`bg-${token.color}`}
+                  className={`bg-${token.color} cursor-move`}
                   key={id}
-                  onClick={() => startPlacing(id)}
+                  onMouseDown={() => startPlacing(id)}
                   style={{
                     position: "absolute",
                     width: "21px",
