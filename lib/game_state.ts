@@ -12,6 +12,7 @@ export interface Character {
   id: string
   name: string
   health: number
+  npc: boolean
 }
 
 export interface CardInstance {
@@ -52,13 +53,14 @@ export function NewGameState(userCampaigns, decks: Decks): GameState {
         id: userCampaign.id,
         name: userCampaign.user.name,
         health: 100,
+        npc: false,
       }
     })
   const tokens = characters.reduce((t, u) => {
     return {
       ...t,
       [u.id]: {
-        color: "blue",
+        color: "blue-500",
       },
     }
   }, {})

@@ -65,7 +65,7 @@ export default async function protectedHandler(
     case "POST":
       const state = NewGameState(
         campaign.users,
-        campaign.state && campaign.state["decks"],
+        campaign.state && campaign.state["decks"]
       )
       const encounter = await prisma.encounter.create({
         data: {

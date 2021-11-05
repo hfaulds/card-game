@@ -7,9 +7,11 @@ import { useRouter } from "next/router"
 import { useState, useRef } from "react"
 import Hand from "components/campaign/hand"
 import Modal from "components/modal"
+import ColorPicker from "components/color_picker"
 import { Cards } from "lib/cards"
 import { GameState } from "lib/game_state"
 import { v4 as uuidv4 } from "uuid"
+import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
 
 interface VisualState {
   mode: string
@@ -20,7 +22,7 @@ interface VisualState {
     }
     color: string
   }
-  cursorLastPos?: {
+  lastCursor?: {
     pos: {
       x: number
       y: number
@@ -95,7 +97,7 @@ export default function Page(props) {
     setVisualState({
       mode: "PLACING",
       userCampaignId: userCampaignId,
-      cursorLastPos: token?.pos && {
+      lastCursor: token?.pos && {
         pos: token.pos,
         color: token.color,
       },
@@ -153,15 +155,6 @@ export default function Page(props) {
           {props.encounter.visibility == "DRAFT" && (
             <span className="text-2xl mr-4"> (Draft) </span>
           )}
-          <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
-            <span
-              className="font-small"
-              onClick={() => setManageCharacterModal(true)}
-            >
-              {" "}
-              Manage Character{" "}
-            </span>
-          </button>
         </div>
         <div
           ref={ref}
@@ -194,27 +187,27 @@ export default function Page(props) {
               }
               return (
                 <div
+                  className={`bg-${token.color}`}
                   key={id}
                   onClick={() => startPlacing(id)}
                   style={{
                     position: "absolute",
                     width: "21px",
                     height: "21px",
-                    backgroundColor: token.color,
                     transform: `translate(${token.pos?.x}px, ${token.pos?.y}px)`,
                   }}
                 />
               )
             })}
-            {visualState.cursorLastPos && (
+            {visualState.lastCursor && (
               <div
+                className={`bg-${visualState.lastCursor.color}`}
                 style={{
                   position: "absolute",
                   width: "21px",
                   height: "21px",
                   opacity: "50%",
-                  backgroundColor: visualState?.cursorLastPos.color,
-                  transform: `translate(${visualState.cursorLastPos.pos.x}px, ${visualState.cursorLastPos.pos.y}px)`,
+                  transform: `translate(${visualState.lastCursor.pos.x}px, ${visualState.lastCursor.pos.y}px)`,
                 }}
               />
             )}
@@ -223,40 +216,45 @@ export default function Page(props) {
             <div className="border-solid border-4 bg-white p-2">
               <p className="font-bold mb-2"> Order </p>
               {gameState.characters.map((character, i) => (
-                <div key={character.id}>
+                <div key={character.id} className="mb-2">
                   <span> {character.name} </span>
-                  {character.id == currentUserCampaign.id && (
-                    <button
-                      className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                      onClick={() => startPlacing(character.id)}
-                    >
-                      <span>Place</span>
-                    </button>
+                  {(character.id == currentUserCampaign.id ||
+                    currentUserCampaign.admin) && (
+                    <>
+                      <button
+                        className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                        onClick={() => startPlacing(character.id)}
+                      >
+                        <LocationMarkerIcon className="w-4 h-4" />
+                      </button>
+                      <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                        <CogIcon className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
-                  <select
-                    name="color"
-                    onChange={(e) =>
-                      selectPlayerTokenColor(character.id, e.target.value)
+                  <ColorPicker
+                    onSelect={(color) =>
+                      selectPlayerTokenColor(character.id, color)
                     }
                     value={gameState.tokens[character.id]?.color}
-                  >
-                    {["Blue", "Green", "Red"].map((c, i) => (
-                      <option key={i} value={c.toLowerCase()}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               ))}
+              {currentUserCampaign.admin && (
+                <>
+                  <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                    <span className="font-small" onClick={endTurn}>
+                      Add Character
+                    </span>
+                  </button>
+                  <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                    <span className="font-small" onClick={endTurn}>
+                      Skip Turn
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
-            {currentUserCampaign.admin && (
-              <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">
-                <span className="font-small" onClick={endTurn}>
-                  {" "}
-                  Skip Turn{" "}
-                </span>
-              </button>
-            )}
           </div>
         </div>
 
