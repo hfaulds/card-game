@@ -44,18 +44,6 @@ export default function Page(props) {
     setState({ action: Actions.MoveMouse, value: { x, y } })
   }
 
-  const placeToken = () => {
-    setState({ action: Actions.FinishPlacing })
-  }
-
-  const selectPlayerTokenColor = (tokenId, color) => {
-    setState({ action: Actions.UpdateTokenColor, value: { tokenId, color } })
-  }
-
-  const startPlacing = (tokenId) => {
-    setState({ action: Actions.StartPlacing, value: { tokenId } })
-  }
-
   const updateToken = async (tokenId, token) => {
     const res = await fetch(`/api/encounter/${props.campaign.id}`, {
       body: JSON.stringify({
@@ -97,7 +85,7 @@ export default function Page(props) {
             backgroundSize: "21px 21px",
           }}
           onMouseMove={mouseMove}
-          onMouseUp={placeToken}
+          onMouseUp={() => setState({ action: Actions.FinishPlacing })}
         >
           <div className="flex-none w-30"></div>
           <div className="flex-grow">
@@ -122,7 +110,9 @@ export default function Page(props) {
                 <div
                   className={`bg-${token.color} cursor-move`}
                   key={id}
-                  onMouseDown={() => startPlacing(id)}
+                  onMouseDown={() =>
+                    setState({ action: Actions.StartPlacing, value: { id } })
+                  }
                   style={{
                     position: "absolute",
                     width: "21px",
@@ -156,7 +146,12 @@ export default function Page(props) {
                     <>
                       <button
                         className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                        onClick={() => startPlacing(character.id)}
+                        onClick={() =>
+                          setState({
+                            action: Actions.StartPlacing,
+                            value: { id: character.id },
+                          })
+                        }
                       >
                         <LocationMarkerIcon className="w-4 h-4" />
                       </button>
@@ -167,7 +162,10 @@ export default function Page(props) {
                   )}
                   <ColorPicker
                     onSelect={(color) =>
-                      selectPlayerTokenColor(character.id, color)
+                      setState({
+                        action: Actions.UpdateTokenColor,
+                        value: { tokenId: character.id, color },
+                      })
                     }
                     value={gameState.tokens[character.id]?.color}
                   />
