@@ -298,6 +298,11 @@ export const getServerSideProps = async (context) => {
             include: {
               user: true,
             },
+            where: {
+              accepted: {
+                not: null,
+              }
+            }
           },
         },
       },
