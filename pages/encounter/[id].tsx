@@ -4,7 +4,7 @@ import { useSession, getSession } from "next-auth/react"
 import Layout from "components/layout"
 import prisma from "lib/prisma"
 import { useRouter } from "next/router"
-import { useState, useRef } from "react"
+import { useState, useRef, useReducer } from "react"
 import Hand from "components/campaign/hand"
 import Modal from "components/modal"
 import ColorPicker from "components/color_picker"
@@ -12,31 +12,17 @@ import { Cards } from "lib/cards"
 import { GameState } from "lib/game_state"
 import { v4 as uuidv4 } from "uuid"
 import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
-
-interface VisualState {
-  mode: string
-  cursor?: {
-    pos?: {
-      x: number
-      y: number
-    }
-    color: string
-  }
-  lastCursor?: {
-    pos: {
-      x: number
-      y: number
-    }
-    color: string
-  }
-  tokenId?: string
-}
+import {
+  VisualActions,
+  VisualStateReducer,
+  VisualState,
+} from "lib/reducers/state"
 
 export default function Page(props) {
   const { data: session } = useSession()
   const [manageCharacterModal, setManageCharacterModal] = useState(false)
   const [gameState, setGameState] = useState<GameState>(props.encounter.state)
-  const [visualState, setVisualState] = useState<VisualState>({
+  const [visualState, setVisualState] = useReducer(VisualStateReducer, {
     mode: "DEFAULT",
   })
   const ref = useRef<HTMLInputElement>(null)
@@ -55,21 +41,10 @@ export default function Page(props) {
   const playCard = () => {}
 
   const mouseMove = (e) => {
-    if (visualState.mode == "PLACING" && visualState.cursor) {
-      const rect = ref!.current!.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      setVisualState({
-        ...visualState,
-        cursor: {
-          ...visualState.cursor,
-          pos: {
-            x: x - (x % 21),
-            y: y - (y % 21),
-          },
-        },
-      })
-    }
+    const rect = ref!.current!.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    setVisualState({ action: VisualActions.MoveMouse, value: { x, y } })
   }
 
   const placeToken = () => {
@@ -81,7 +56,7 @@ export default function Page(props) {
           pos: visualState.cursor?.pos,
           color: visualState.cursor?.color,
         })
-        setVisualState({ mode: "DEFAULT" })
+        setVisualState({ action: VisualActions.MouseUp })
       }
     }
   }
@@ -96,15 +71,8 @@ export default function Page(props) {
   const startPlacing = (tokenId) => {
     const token = gameState.tokens[tokenId]
     setVisualState({
-      mode: "PLACING",
-      tokenId: tokenId,
-      lastCursor: token?.pos && {
-        pos: token.pos,
-        color: token.color,
-      },
-      cursor: {
-        color: token.color,
-      },
+      action: VisualActions.MouseDown,
+      value: { tokenId, token },
     })
     setGameState({
       ...gameState,
@@ -303,8 +271,8 @@ export const getServerSideProps = async (context) => {
             where: {
               accepted: {
                 not: null,
-              }
-            }
+              },
+            },
           },
         },
       },
