@@ -54,7 +54,7 @@ export default function Page(props) {
       body: JSON.stringify({
         encounterId: props.encounter.id,
         token,
-        userCampaignId: currentUserCampaign.id,
+        tokenId,
       }),
       headers: {
         "Content-Type": "application/json",

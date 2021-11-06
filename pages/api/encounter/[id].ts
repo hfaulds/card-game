@@ -83,10 +83,10 @@ export default async function protectedHandler(
       res.json({ encounter })
       break
     case "PUT":
-      const { token, userCampaignId, encounterId } = req.body
+      const { token, tokenId, encounterId } = req.body
       if (
         !(
-          userCampaignId &&
+          tokenId &&
           encounterId &&
           typeof token?.pos?.x == "number" &&
           typeof token?.pos?.y == "number"
@@ -95,11 +95,7 @@ export default async function protectedHandler(
         res.status(422).send("")
         return
       }
-      if (
-        !(
-          currentUserCampaign?.admin || currentUserCampaign.id == userCampaignId
-        )
-      ) {
+      if (!(currentUserCampaign?.admin || currentUserCampaign.id == tokenId)) {
         res.status(403).send("")
         return
       }
@@ -109,7 +105,7 @@ export default async function protectedHandler(
       }
       await prisma.$executeRawUnsafe(
         `UPDATE Encounter
-        SET state = JSON_MERGE_PATCH(state, '{"tokens":{"${userCampaignId}":{"color":"${token.color}"${pos}}}}')
+        SET state = JSON_MERGE_PATCH(state, '{"tokens":{"${tokenId}":{"color":"${token.color}"${pos}}}}')
         WHERE id = ?;`,
         encounterId
       )
