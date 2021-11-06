@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { Fragment } from "react"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { ChevronRightIcon } from "@heroicons/react/outline"
 
@@ -24,26 +25,20 @@ export default function Header({ breadcrumbs }) {
               </a>
             </Link>
             {breadcrumbs?.map((breadcrumb, i) => (
-              <>
-                <ChevronRightIcon
-                  key={`chevron-${i}`}
-                  className="sm:inline hidden w-4 h-6 text-gray-500"
-                />
+              <Fragment key={i}>
+                <ChevronRightIcon className="sm:inline hidden w-4 h-6 text-gray-500" />
                 {!!breadcrumb.url ? (
-                  <Link key={i} href={breadcrumb.url}>
+                  <Link href={breadcrumb.url}>
                     <a className="sm:inline hidden truncate text-base font-medium text-gray-500 hover:text-gray-900">
                       {breadcrumb.text}
                     </a>
                   </Link>
                 ) : (
-                  <span
-                    key={i}
-                    className="sm:inline hidden truncate text-base font-medium"
-                  >
+                  <span className="sm:inline hidden truncate text-base font-medium">
                     {breadcrumb.text}
                   </span>
                 )}
-              </>
+              </Fragment>
             ))}
           </nav>
           <div className="flex flex-none items-center">

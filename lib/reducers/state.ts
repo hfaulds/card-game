@@ -127,7 +127,7 @@ export function StateReducer(state: State, event): State {
         visualState: {
           ...visualState,
           syncing: visualState.syncing - 1,
-        }
+        },
       }
   }
   return state

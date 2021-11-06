@@ -10,7 +10,11 @@ import Modal from "components/modal"
 import ColorPicker from "components/color_picker"
 import { Cards } from "lib/cards"
 import { v4 as uuidv4 } from "uuid"
-import { CogIcon, LocationMarkerIcon, RefreshIcon } from "@heroicons/react/outline"
+import {
+  CogIcon,
+  LocationMarkerIcon,
+  RefreshIcon,
+} from "@heroicons/react/outline"
 import { Actions, StateReducer, State } from "lib/reducers/state"
 
 export default function Page(props) {
@@ -79,7 +83,9 @@ export default function Page(props) {
           {props.encounter.visibility == "DRAFT" && (
             <span className="text-2xl mr-4"> (Draft) </span>
           )}
-          { visualState.syncing > 0 && <RefreshIcon className="inline-block animate-spin h-6 w-6"/> }
+          {visualState.syncing > 0 && (
+            <RefreshIcon className="inline-block animate-spin h-6 w-6" />
+          )}
         </div>
         <div
           ref={ref}
@@ -115,17 +121,18 @@ export default function Page(props) {
                 }}
               />
             )}
-            {gameState.characters.map(({ id }) => {
-              const token = gameState.tokens[id]
-              if (!token.pos) {
-                return <></>
-              }
-              return (
+            {gameState.characters
+              .map(({ id }) => ({ tokenId: id, token: gameState.tokens[id] }))
+              .filter(({ token: { pos } }) => pos)
+              .map(({ tokenId, token }) => (
                 <div
                   className={`bg-${token.color} cursor-move`}
-                  key={id}
+                  key={tokenId}
                   onMouseDown={() =>
-                    setState({ action: Actions.StartPlacing, value: { tokenId: id } })
+                    setState({
+                      action: Actions.StartPlacing,
+                      value: { tokenId },
+                    })
                   }
                   style={{
                     position: "absolute",
@@ -134,8 +141,7 @@ export default function Page(props) {
                     transform: `translate(${token.pos?.x}px, ${token.pos?.y}px)`,
                   }}
                 />
-              )
-            })}
+              ))}
             {visualState.lastCursor && (
               <div
                 className={`bg-${visualState.lastCursor.color}`}
@@ -180,13 +186,10 @@ export default function Page(props) {
                         action: Actions.UpdateTokenColor,
                         value: { tokenId: character.id, color },
                       })
-                      updateToken(
-                        character.id,
-                        {
-                          ...gameState.tokens[character.id],
-                          color,
-                        },
-                      )
+                      updateToken(character.id, {
+                        ...gameState.tokens[character.id],
+                        color,
+                      })
                     }}
                     value={gameState.tokens[character.id]?.color}
                   />

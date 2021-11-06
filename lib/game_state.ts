@@ -34,12 +34,14 @@ export interface Decks {
 }
 
 export interface Tokens {
-  [key: string]: {
-    color: string
-    pos?: {
-      x: number
-      y: number
-    }
+  [key: string]: Token
+}
+
+export interface Token {
+  color: string
+  pos?: {
+    x: number
+    y: number
   }
 }
 
