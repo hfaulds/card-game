@@ -86,6 +86,7 @@ export default async function protectedHandler(
           typeof token?.pos?.x == "number" &&
           typeof token?.pos?.y == "number"
         )
+
       ) {
         res.status(422).send("")
         return

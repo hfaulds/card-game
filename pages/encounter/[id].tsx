@@ -10,7 +10,7 @@ import Modal from "components/modal"
 import ColorPicker from "components/color_picker"
 import { Cards } from "lib/cards"
 import { v4 as uuidv4 } from "uuid"
-import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
+import { CogIcon, LocationMarkerIcon, RefreshIcon } from "@heroicons/react/outline"
 import { Actions, StateReducer, State } from "lib/reducers/state"
 
 export default function Page(props) {
@@ -19,6 +19,7 @@ export default function Page(props) {
   const [{ gameState, visualState }, setState] = useReducer(StateReducer, {
     gameState: props.encounter.state,
     visualState: {
+      syncing: 0,
       mode: "DEFAULT",
     },
   })
@@ -47,15 +48,18 @@ export default function Page(props) {
   const updateToken = async (tokenId, token) => {
     const res = await fetch(`/api/encounter/${props.campaign.id}`, {
       body: JSON.stringify({
-        tokenId,
         encounterId: props.encounter.id,
         token,
+        userCampaignId: currentUserCampaign.id,
       }),
       headers: {
         "Content-Type": "application/json",
       },
       method: "PUT",
     })
+    if (res.ok) {
+      setState({ action: Actions.Synced })
+    }
   }
 
   return (
@@ -75,6 +79,7 @@ export default function Page(props) {
           {props.encounter.visibility == "DRAFT" && (
             <span className="text-2xl mr-4"> (Draft) </span>
           )}
+          { visualState.syncing > 0 && <RefreshIcon className="inline-block animate-spin h-6 w-6"/> }
         </div>
         <div
           ref={ref}
@@ -85,7 +90,16 @@ export default function Page(props) {
             backgroundSize: "21px 21px",
           }}
           onMouseMove={mouseMove}
-          onMouseUp={() => setState({ action: Actions.FinishPlacing })}
+          onMouseUp={() => {
+            if (
+              visualState.mode == "PLACING" &&
+              visualState.tokenId &&
+              visualState.cursor?.pos
+            ) {
+              setState({ action: Actions.FinishPlacing })
+              updateToken(visualState.tokenId, visualState.cursor)
+            }
+          }}
         >
           <div className="flex-none w-30"></div>
           <div className="flex-grow">
@@ -111,7 +125,7 @@ export default function Page(props) {
                   className={`bg-${token.color} cursor-move`}
                   key={id}
                   onMouseDown={() =>
-                    setState({ action: Actions.StartPlacing, value: { id } })
+                    setState({ action: Actions.StartPlacing, value: { tokenId: id } })
                   }
                   style={{
                     position: "absolute",
@@ -149,7 +163,7 @@ export default function Page(props) {
                         onClick={() =>
                           setState({
                             action: Actions.StartPlacing,
-                            value: { id: character.id },
+                            value: { tokenId: character.id },
                           })
                         }
                       >
@@ -161,12 +175,19 @@ export default function Page(props) {
                     </>
                   )}
                   <ColorPicker
-                    onSelect={(color) =>
+                    onSelect={(color) => {
                       setState({
                         action: Actions.UpdateTokenColor,
                         value: { tokenId: character.id, color },
                       })
-                    }
+                      updateToken(
+                        character.id,
+                        {
+                          ...gameState.tokens[character.id],
+                          color,
+                        },
+                      )
+                    }}
                     value={gameState.tokens[character.id]?.color}
                   />
                 </div>

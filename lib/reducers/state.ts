@@ -5,6 +5,7 @@ export const Actions = {
   FinishPlacing: "FinishPlacing",
   StartPlacing: "StartPlacing",
   UpdateTokenColor: "UpdateTokenColor",
+  Synced: "Synced",
 }
 
 export interface State {
@@ -26,6 +27,7 @@ export interface State {
       color: string
     }
     tokenId?: string
+    syncing: number
   }
 }
 
@@ -72,6 +74,7 @@ export function StateReducer(state: State, event): State {
           },
         },
         visualState: {
+          syncing: visualState.syncing + 1,
           mode: "DEFAULT",
         },
       }
@@ -89,6 +92,7 @@ export function StateReducer(state: State, event): State {
           },
         },
         visualState: {
+          ...visualState,
           mode: "PLACING",
           tokenId: event.value.tokenId,
           lastCursor: token?.pos && {
@@ -112,7 +116,18 @@ export function StateReducer(state: State, event): State {
             },
           },
         },
-        visualState,
+        visualState: {
+          ...visualState,
+          syncing: visualState.syncing + 1,
+        },
+      }
+    case Actions.Synced:
+      return {
+        gameState,
+        visualState: {
+          ...visualState,
+          syncing: visualState.syncing - 1,
+        }
       }
   }
   return state
