@@ -45,6 +45,11 @@ export default async function protectedHandler(
       id: true,
       state: true,
       users: {
+        where: {
+          accepted: {
+            not: null,
+          },
+        },
         select: {
           id: true,
           user: {
