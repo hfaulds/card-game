@@ -67,31 +67,41 @@ export default async function protectedHandler(
   }
 
   switch (method) {
-    case "POST":
-      const state = NewGameState(
-        campaign.users,
-        campaign.state && campaign.state["decks"]
+    case "PUT":
+      const { token, tokenId, encounterId } = req.body
+      if (
+        !(
+          tokenId &&
+          encounterId &&
+          token.color &&
+          (!token?.pos ||
+            (typeof token?.pos?.x == "number" &&
+              typeof token?.pos?.y == "number"))
+        )
+      ) {
+        console.log(tokenId, encounterId, token)
+        res.status(422).send("")
+        return
+      }
+      if (!(currentUserCampaign?.admin || currentUserCampaign.id == tokenId)) {
+        res.status(403).send("")
+        return
+      }
+      let pos = ""
+      if (token.pos) {
+        pos = `,"pos":{"x":${token.pos.x},"y":${token.pos.y}}`
+      }
+      await prisma.$executeRawUnsafe(
+        `UPDATE Encounter
+        SET state = JSON_MERGE_PATCH(state, '{"tokens":{"${tokenId}":{"color":"${token.color}"${pos}}}}')
+        WHERE id = ?;`,
+        encounterId
       )
-      const encounter = await prisma.encounter.create({
-        data: {
-          campaignId: campaign.id,
-          name: req.body.name,
-          state: state as any,
-        },
-      })
       res.statusCode = 200
-      res.json({ encounter })
-      break
-    case "DELETE":
-      await prisma.encounter.delete({
-        where: {
-          id: req.body.encounterId,
-        },
-      })
-      res.status(200).send("")
+      res.send("")
       break
     default:
-      res.setHeader("Allow", ["GET", "PUT", "DELETE"])
+      res.setHeader("Allow", ["PUT"])
       res.status(405).end(`Method ${method} Not Allowed`)
   }
 }

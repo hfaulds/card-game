@@ -7,15 +7,10 @@ import { useRouter } from "next/router"
 import { useState, useRef, useReducer } from "react"
 import Hand from "components/campaign/hand"
 import Modal from "components/modal"
-import ColorPicker from "components/color_picker"
 import { Cards } from "lib/cards"
-import { v4 as uuidv4 } from "uuid"
-import {
-  CogIcon,
-  LocationMarkerIcon,
-  RefreshIcon,
-} from "@heroicons/react/outline"
+import { RefreshIcon } from "@heroicons/react/outline"
 import { Actions, StateReducer, State } from "lib/reducers/state"
+import TurnOrder from "components/turn_order"
 
 export default function Page(props) {
   const { data: session } = useSession()
@@ -39,7 +34,6 @@ export default function Page(props) {
   const currentUserCampaign = props.campaign.users.find(
     (userCampaign) => userCampaign.userEmail == session?.user?.email
   )
-  const endTurn = () => {}
   const playCard = () => {}
 
   const mouseMove = (e) => {
@@ -50,7 +44,7 @@ export default function Page(props) {
   }
 
   const updateToken = async (tokenId, token) => {
-    const res = await fetch(`/api/encounter/${props.campaign.id}`, {
+    const res = await fetch(`/api/encounter/${props.campaign.id}/token`, {
       body: JSON.stringify({
         encounterId: props.encounter.id,
         token,
@@ -99,11 +93,11 @@ export default function Page(props) {
           onMouseUp={() => {
             if (
               visualState.mode == "PLACING" &&
-              visualState.tokenId &&
+              visualState.placingTokenId &&
               visualState.cursor?.pos
             ) {
               setState({ action: Actions.FinishPlacing })
-              updateToken(visualState.tokenId, visualState.cursor)
+              updateToken(visualState.placingTokenId, visualState.cursor)
             }
           }}
         >
@@ -123,7 +117,7 @@ export default function Page(props) {
             )}
             {gameState.characters
               .map(({ id }) => ({ tokenId: id, token: gameState.tokens[id] }))
-              .filter(({ token: { pos } }) => pos)
+              .filter(({ token }) => token?.pos)
               .map(({ tokenId, token }) => (
                 <div
                   className={`bg-${token.color} cursor-move`}
@@ -156,60 +150,13 @@ export default function Page(props) {
             )}
           </div>
           <div className="flex-none w-30">
-            <div className="border-solid border-4 bg-white p-2">
-              <p className="font-bold mb-2"> Order </p>
-              {gameState.characters.map((character, i) => (
-                <div key={character.id} className="mb-2">
-                  <span> {character.name} </span>
-                  {(character.id == currentUserCampaign.id ||
-                    currentUserCampaign.admin) && (
-                    <>
-                      <button
-                        className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                        onClick={() =>
-                          setState({
-                            action: Actions.StartPlacing,
-                            value: { tokenId: character.id },
-                          })
-                        }
-                      >
-                        <LocationMarkerIcon className="w-4 h-4" />
-                      </button>
-                      <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
-                        <CogIcon className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                  <ColorPicker
-                    onSelect={(color) => {
-                      setState({
-                        action: Actions.UpdateTokenColor,
-                        value: { tokenId: character.id, color },
-                      })
-                      updateToken(character.id, {
-                        ...gameState.tokens[character.id],
-                        color,
-                      })
-                    }}
-                    value={gameState.tokens[character.id]?.color}
-                  />
-                </div>
-              ))}
-              {currentUserCampaign.admin && (
-                <>
-                  <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
-                    <span className="font-small" onClick={endTurn}>
-                      Add Character
-                    </span>
-                  </button>
-                  <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
-                    <span className="font-small" onClick={endTurn}>
-                      Skip Turn
-                    </span>
-                  </button>
-                </>
-              )}
-            </div>
+            <TurnOrder
+              encounter={props.encounter}
+              gameState={gameState}
+              currentUserCampaign={currentUserCampaign}
+              setState={setState}
+              updateToken={updateToken}
+            />
           </div>
         </div>
 

@@ -6,6 +6,8 @@ export const Actions = {
   StartPlacing: "StartPlacing",
   UpdateTokenColor: "UpdateTokenColor",
   Synced: "Synced",
+  AddCharacter: "AddCharacter",
+  RenameCharacter: "RenameCharacter",
 }
 
 export interface State {
@@ -26,7 +28,8 @@ export interface State {
       }
       color: string
     }
-    tokenId?: string
+    placingTokenId?: string
+    renamingCharacterId?: string
     syncing: number
   }
 }
@@ -56,7 +59,7 @@ export function StateReducer(state: State, event): State {
       if (
         !(
           visualState.mode == "PLACING" &&
-          visualState.tokenId &&
+          visualState.placingTokenId &&
           visualState.cursor?.pos
         )
       ) {
@@ -67,7 +70,7 @@ export function StateReducer(state: State, event): State {
           ...gameState,
           tokens: {
             ...gameState.tokens,
-            [visualState.tokenId]: {
+            [visualState.placingTokenId]: {
               pos: visualState.cursor.pos,
               color: visualState.cursor.color,
             },
@@ -94,7 +97,7 @@ export function StateReducer(state: State, event): State {
         visualState: {
           ...visualState,
           mode: "PLACING",
-          tokenId: event.value.tokenId,
+          placingTokenId: event.value.tokenId,
           lastCursor: token?.pos && {
             pos: token.pos,
             color: token.color,
@@ -128,6 +131,41 @@ export function StateReducer(state: State, event): State {
           ...visualState,
           syncing: visualState.syncing - 1,
         },
+      }
+    case Actions.AddCharacter:
+      return {
+        gameState: {
+          ...gameState,
+          characters: gameState.characters.concat({
+            id: event.value.id,
+            name: event.value.name,
+            health: 100,
+            npc: true,
+          }),
+          tokens: {
+            ...gameState.tokens,
+            [event.value.id]: {
+              color: event.value.tokenColor,
+            },
+          },
+        },
+        visualState,
+      }
+    case Actions.RenameCharacter:
+      return {
+        gameState: {
+          ...gameState,
+          characters: gameState.characters.map((c) => {
+            if (event.value.id == c.id) {
+              return {
+                ...c,
+                name: event.value.name,
+              }
+            }
+            return c
+          }),
+        },
+        visualState,
       }
   }
   return state
