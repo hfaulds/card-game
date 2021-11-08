@@ -115,8 +115,8 @@ export default function Page(props) {
                 }}
               />
             )}
-            {gameState.characters
-              .map(({ id }) => ({ tokenId: id, token: gameState.tokens[id] }))
+            {Object.keys(gameState.characters)
+              .map((id) => ({ tokenId: id, token: gameState.tokens[id] }))
               .filter(({ token }) => token?.pos)
               .map(({ tokenId, token }) => (
                 <div

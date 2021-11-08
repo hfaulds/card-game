@@ -30,23 +30,23 @@ export default async function protectedHandler(
     res.status(403).end("")
     return
   }
+  const { name, encounterId } = req.body
   switch (method) {
     case "POST":
-      const { name, encounterId } = req.body
       if (!name) {
         res.status(422).send("")
         return
       }
-      const id = uuidv4()
+      const charId = uuidv4()
       const tokenColor = "blue-500"
       await prisma.$executeRawUnsafe(
         `UPDATE Encounter
-        SET state = JSON_MERGE(state, '{"characters":[{"id":"${id}","name":"${name}","health":100,"npc":true}],"tokens":{"${id}":{"color":"${tokenColor}"}}}')
+        SET state = JSON_MERGE_PATCH(state, '{"characters":{"${charId}":{"name":"${name}","health":100,"npc":true}},"tokens":{"${charId}":{"color":"${tokenColor}"}}}')
         WHERE id = ?;`,
         encounterId
       )
       res.statusCode = 200
-      res.json({ character: { id, name, tokenColor } })
+      res.json({ character: { id: charId, name, tokenColor } })
       break
     default:
       res.setHeader("Allow", ["PUT"])

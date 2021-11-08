@@ -1,4 +1,5 @@
 import { Actions } from "lib/reducers/state"
+import { Characters } from "lib/game_state"
 import ColorPicker from "components/color_picker"
 import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
 import { useState } from "react"
@@ -10,7 +11,7 @@ export default function TurnOrder({
   setState,
   updateToken,
 }) {
-  const [renamingId, setRenamingId] = useState()
+  const [renamingId, setRenamingId] = useState<string | undefined>()
   const [newName, setNewName] = useState("")
 
   const addCharacter = async () => {
@@ -39,70 +40,71 @@ export default function TurnOrder({
   return (
     <div className="border-solid border-4 bg-white p-2">
       <p className="font-bold mb-2"> Order </p>
-      {gameState.characters.map((character, i) => (
-        <div key={character.id} className="mb-2">
-          {renamingId == character.id ? (
-            <input
-              type="text"
-              className="w-32"
-              value={newName}
-              autoFocus
-              onChange={(e) => setNewName(e.target.value)}
-              onBlur={() => {
-                setState({
-                  action: Actions.RenameCharacter,
-                  value: { id: character.id, name: newName },
-                })
-                setRenamingId(undefined)
-              }}
-            />
-          ) : (
-            <div
-              className={`${
-                character.id == currentUserCampaign.id && "font-bold"
-              } inline-block w-32 truncate`}
-              onClick={() => {
-                setRenamingId(character.id)
-                setNewName(character.name)
-              }}
-            >
-              {character.name}
-            </div>
-          )}
-          {(character.id == currentUserCampaign.id ||
-            currentUserCampaign.admin) && (
-            <>
-              <button
-                className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                onClick={() => {
+      {Object.entries(gameState.characters as Characters).map(
+        ([id, character]) => (
+          <div key={id} className="mb-2">
+            {renamingId == id ? (
+              <input
+                type="text"
+                className="w-32"
+                value={newName}
+                autoFocus
+                onChange={(e) => setNewName(e.target.value)}
+                onBlur={() => {
                   setState({
-                    action: Actions.StartPlacing,
-                    value: { tokenId: character.id },
+                    action: Actions.RenameCharacter,
+                    value: { id, name: newName },
                   })
+                  setRenamingId(undefined)
+                }}
+              />
+            ) : (
+              <div
+                className={`${
+                  id == currentUserCampaign.id && "font-bold"
+                } inline-block w-32 truncate`}
+                onClick={() => {
+                  setRenamingId(id)
+                  setNewName(character.name)
                 }}
               >
-                <LocationMarkerIcon className="w-4 h-4" />
-              </button>
-              <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
-                <CogIcon className="w-4 h-4" />
-              </button>
-            </>
-          )}
-          <ColorPicker
-            onSelect={(color) => {
-              setState({
-                action: Actions.UpdateTokenColor,
-                value: { tokenId: character.id, color },
-              })
-              updateToken(character.id, {
-                ...gameState.tokens[character.id],
-                color,
-              })
-            }}
-            value={gameState.tokens[character.id]?.color}
-          />
-        </div>
-      ))}
+                {character.name}
+              </div>
+            )}
+            {(id == currentUserCampaign.id || currentUserCampaign.admin) && (
+              <>
+                <button
+                  className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                  onClick={() => {
+                    setState({
+                      action: Actions.StartPlacing,
+                      value: { tokenId: id },
+                    })
+                  }}
+                >
+                  <LocationMarkerIcon className="w-4 h-4" />
+                </button>
+                <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                  <CogIcon className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            <ColorPicker
+              onSelect={(color) => {
+                setState({
+                  action: Actions.UpdateTokenColor,
+                  value: { tokenId: id, color },
+                })
+                updateToken(id, {
+                  ...gameState.tokens[id],
+                  color,
+                })
+              }}
+              value={gameState.tokens[id]?.color}
+            />
+          </div>
+        )
+      )}
       {currentUserCampaign.admin && (
         <>
           <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">

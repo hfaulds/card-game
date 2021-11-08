@@ -136,12 +136,14 @@ export function StateReducer(state: State, event): State {
       return {
         gameState: {
           ...gameState,
-          characters: gameState.characters.concat({
-            id: event.value.id,
-            name: event.value.name,
-            health: 100,
-            npc: true,
-          }),
+          characters: {
+            ...gameState.characters,
+            [event.value.id]: {
+              name: event.value.name,
+              health: 100,
+              npc: true,
+            },
+          },
           tokens: {
             ...gameState.tokens,
             [event.value.id]: {
@@ -155,15 +157,13 @@ export function StateReducer(state: State, event): State {
       return {
         gameState: {
           ...gameState,
-          characters: gameState.characters.map((c) => {
-            if (event.value.id == c.id) {
-              return {
-                ...c,
-                name: event.value.name,
-              }
-            }
-            return c
-          }),
+          characters: {
+            ...gameState.characters,
+            [event.value.id]: {
+              ...gameState.characters[event.value.id],
+              name: event.value.name,
+            },
+          },
         },
         visualState,
       }

@@ -2,14 +2,16 @@ import { Card, Cards } from "lib/cards"
 import { v4 as uuidv4 } from "uuid"
 
 export interface GameState {
-  characters: Character[]
+  characters: Characters
   cards: { [key: string]: CardPiles }
   tokens: Tokens
   turn: string
 }
+export interface Characters {
+  [key: string]: Character
+}
 
 export interface Character {
-  id: string
   name: string
   health: number
   npc: boolean
@@ -48,27 +50,27 @@ export interface Token {
 const handSize = 10
 
 export function NewGameState(userCampaigns, decks: Decks): GameState {
-  const characters = userCampaigns
-    .filter(({ id }) => id)
-    .map((userCampaign) => {
-      return {
-        id: userCampaign.id,
-        name: userCampaign.user.name,
-        health: 100,
-        npc: false,
-      }
-    })
-  const tokens = characters.reduce((t, u) => {
+  const characters = userCampaigns.reduce((t, u) => {
     return {
       ...t,
       [u.id]: {
+        name: u.user.name,
+        health: 100,
+        npc: false,
+      },
+    }
+  }, {})
+  const tokens = Object.keys(characters).reduce((t, uid) => {
+    return {
+      ...t,
+      [uid]: {
         color: "blue-500",
       },
     }
   }, {})
-  const cards = characters.reduce((d, u) => {
+  const cards = Object.keys(characters).reduce((d, uid) => {
     let draw: any[] = []
-    Object.entries(decks[u.id]).forEach(([cid, quantity]) => {
+    Object.entries(decks[uid]).forEach(([cid, quantity]) => {
       let card = Cards.find((card) => card.id == cid)
       for (let i = 0; i < quantity; i++) {
         draw.push({
@@ -78,7 +80,7 @@ export function NewGameState(userCampaigns, decks: Decks): GameState {
       }
     })
     return {
-      [u.id]: DrawHand({
+      [uid]: DrawHand({
         draw: shuffle(draw),
         discard: [],
         hand: [],
