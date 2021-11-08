@@ -1,4 +1,4 @@
-import { GameState } from "lib/game_state"
+import { ApplyEvent, EventAction, GameState } from "lib/game_state"
 
 export const Actions = {
   MoveMouse: "MoveMouse",
@@ -16,13 +16,6 @@ export interface State {
     mode: string
     cursor?: {
       pos?: {
-        x: number
-        y: number
-      }
-      color: string
-    }
-    lastCursor?: {
-      pos: {
         x: number
         y: number
       }
@@ -66,42 +59,24 @@ export function StateReducer(state: State, event): State {
         return state
       }
       return {
-        gameState: {
-          ...gameState,
-          tokens: {
-            ...gameState.tokens,
-            [visualState.placingTokenId]: {
-              pos: visualState.cursor.pos,
-              color: visualState.cursor.color,
-            },
-          },
-        },
+        gameState: ApplyEvent(gameState, {
+          action: EventAction.UpdateTokenPos,
+          id: visualState.placingTokenId,
+          pos: visualState.cursor.pos,
+        }),
         visualState: {
           syncing: visualState.syncing + 1,
           mode: "DEFAULT",
         },
       }
     case Actions.StartPlacing:
-      const token = gameState.tokens[event.value.tokenId]
+      const token = gameState.tokens[event.value.id]
       return {
-        gameState: {
-          ...gameState,
-          tokens: {
-            ...gameState.tokens,
-            [event.value.tokenId]: {
-              ...token,
-              pos: undefined,
-            },
-          },
-        },
+        gameState,
         visualState: {
           ...visualState,
           mode: "PLACING",
-          placingTokenId: event.value.tokenId,
-          lastCursor: token?.pos && {
-            pos: token.pos,
-            color: token.color,
-          },
+          placingTokenId: event.value.id,
           cursor: {
             color: token.color,
           },
@@ -109,16 +84,11 @@ export function StateReducer(state: State, event): State {
       }
     case Actions.UpdateTokenColor:
       return {
-        gameState: {
-          ...gameState,
-          tokens: {
-            ...gameState.tokens,
-            [event.value.tokenId]: {
-              ...gameState.tokens[event.value.tokenId],
-              color: event.value.color,
-            },
-          },
-        },
+        gameState: ApplyEvent(gameState, {
+          action: EventAction.UpdateTokenColor,
+          id: event.value.id,
+          color: event.value.color,
+        }),
         visualState: {
           ...visualState,
           syncing: visualState.syncing + 1,
@@ -134,37 +104,20 @@ export function StateReducer(state: State, event): State {
       }
     case Actions.AddCharacter:
       return {
-        gameState: {
-          ...gameState,
-          characters: {
-            ...gameState.characters,
-            [event.value.id]: {
-              name: event.value.name,
-              health: 100,
-              npc: true,
-            },
-          },
-          tokens: {
-            ...gameState.tokens,
-            [event.value.id]: {
-              color: event.value.tokenColor,
-            },
-          },
-        },
+        gameState: ApplyEvent(gameState, {
+          action: EventAction.AddCharacter,
+          id: event.value.id,
+          name: event.value.name,
+        }),
         visualState,
       }
     case Actions.RenameCharacter:
       return {
-        gameState: {
-          ...gameState,
-          characters: {
-            ...gameState.characters,
-            [event.value.id]: {
-              ...gameState.characters[event.value.id],
-              name: event.value.name,
-            },
-          },
-        },
+        gameState: ApplyEvent(gameState, {
+          action: EventAction.UpdateCharacterName,
+          id: event.value.id,
+          name: event.value.name,
+        }),
         visualState,
       }
   }

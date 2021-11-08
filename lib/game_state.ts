@@ -1,5 +1,7 @@
 import { Card, Cards } from "lib/cards"
 import { v4 as uuidv4 } from "uuid"
+import { escape as escapeSQL } from "sqlstring"
+import merge from "ts-deepmerge"
 
 export interface GameState {
   characters: Characters
@@ -128,4 +130,92 @@ function shuffle(array) {
   }
 
   return array
+}
+
+export function ApplyEvent(state: GameState, event: Event): GameState {
+  const patch = PatchForEvent(event)
+  const newState = merge(state, patch)
+  return newState
+}
+
+export type Event = UpdateTokenPosEvent | UpdateTokenColorEvent | AddCharacterEvent | UpdateCharacterNameEvent
+
+export enum EventAction {
+  UpdateTokenPos = "UpdateTokenPos"
+  UpdateTokenColor = "UpdateTokenColor"
+  AddCharacter = "AddCharacter"
+  UpdateCharacterName = "UpdateCharacterName"
+  NextTurn = "NextTurn"
+}
+
+interface UpdateTokenPosEvent {
+  action: EventAction.UpdateTokenPos
+  id: string
+  pos: { x: number, y: number }
+}
+
+interface UpdateTokenColorEvent {
+  action: EventAction.UpdateTokenColor
+  id: string
+  color: string
+}
+
+interface AddCharacterEvent {
+  action: EventAction.AddCharacter
+  id: string
+  name: string
+}
+
+interface UpdateCharacterNameEvent {
+  action: EventAction.UpdateCharacterName
+  id: string
+  name: string
+}
+
+export function PatchForEvent(event: Event) {
+  switch (event.action) {
+  case EventAction.UpdateTokenPos:
+    return {
+      tokens: {
+        [event.id]: {
+          pos: event.pos,
+        },
+      },
+    }
+  case EventAction.UpdateTokenColor:
+    return {
+      tokens: {
+        [event.id]: {
+          color: event.color,
+        },
+      },
+    }
+  case EventAction.AddCharacter:
+    const id = uuidv4()
+    return {
+      characters: {
+        [id]: {
+          name: event.name,
+          health: 100,
+          npc: true,
+        },
+      },
+      tokens: {
+        [id]: {
+          color: "blue-500",
+        },
+      },
+      decks: {
+        [id]: {}
+      },
+    }
+  case EventAction.UpdateCharacterName:
+    return {
+      characters: {
+        [event.id]: {
+          name: event.name,
+        },
+      },
+    }
+  }
 }

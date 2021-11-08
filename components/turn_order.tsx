@@ -1,5 +1,5 @@
 import { Actions } from "lib/reducers/state"
-import { Characters } from "lib/game_state"
+import { Characters, EventAction } from "lib/game_state"
 import ColorPicker from "components/color_picker"
 import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
 import { useState } from "react"
@@ -35,6 +35,26 @@ export default function TurnOrder({
     setState({ action: Actions.AddCharacter, value: character })
   }
 
+  const renameCharacter = async (id, name) => {
+    const res = await fetch(
+      `/api/encounter/${currentUserCampaign.campaignId}`,
+      {
+        body: JSON.stringify({
+          encounterId: encounter.id,
+          patch: {
+            action: EventAction.UpdateCharacterName,
+            id: id,
+            name: name,
+          }
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+      }
+    )
+  }
+
   const endTurn = () => {}
 
   return (
@@ -55,6 +75,7 @@ export default function TurnOrder({
                     action: Actions.RenameCharacter,
                     value: { id, name: newName },
                   })
+                  renameCharacter(id, newName)
                   setRenamingId(undefined)
                 }}
               />
@@ -78,7 +99,7 @@ export default function TurnOrder({
                   onClick={() => {
                     setState({
                       action: Actions.StartPlacing,
-                      value: { tokenId: id },
+                      value: { id },
                     })
                   }}
                 >
@@ -93,7 +114,7 @@ export default function TurnOrder({
               onSelect={(color) => {
                 setState({
                   action: Actions.UpdateTokenColor,
-                  value: { tokenId: id, color },
+                  value: { id, color },
                 })
                 updateToken(id, {
                   ...gameState.tokens[id],

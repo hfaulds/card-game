@@ -115,9 +115,10 @@ export default function Page(props) {
                 }}
               />
             )}
-            {Object.keys(gameState.characters)
+            {
+              Object.keys(gameState.characters)
               .map((id) => ({ tokenId: id, token: gameState.tokens[id] }))
-              .filter(({ token }) => token?.pos)
+              .filter(({ tokenId, token }) => token?.pos)
               .map(({ tokenId, token }) => (
                 <div
                   className={`bg-${token.color} cursor-move`}
@@ -125,29 +126,19 @@ export default function Page(props) {
                   onMouseDown={() =>
                     setState({
                       action: Actions.StartPlacing,
-                      value: { tokenId },
+                      value: { id: tokenId },
                     })
                   }
                   style={{
                     position: "absolute",
+                    opacity: visualState.placingTokenId == tokenId ? "50%" : "100%",
                     width: "21px",
                     height: "21px",
                     transform: `translate(${token.pos?.x}px, ${token.pos?.y}px)`,
                   }}
                 />
-              ))}
-            {visualState.lastCursor && (
-              <div
-                className={`bg-${visualState.lastCursor.color}`}
-                style={{
-                  position: "absolute",
-                  width: "21px",
-                  height: "21px",
-                  opacity: "50%",
-                  transform: `translate(${visualState.lastCursor.pos.x}px, ${visualState.lastCursor.pos.y}px)`,
-                }}
-              />
-            )}
+              ))
+            }
           </div>
           <div className="flex-none w-30">
             <TurnOrder

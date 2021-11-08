@@ -1,6 +1,6 @@
 import { getSession } from "next-auth/react"
 import type { NextApiRequest, NextApiResponse } from "next"
-import { NewGameState, GameState, Decks } from "lib/game_state"
+import { NewGameState, GameState, Decks, PatchForEvent } from "lib/game_state"
 
 import prisma from "lib/prisma"
 
@@ -81,6 +81,22 @@ export default async function protectedHandler(
       })
       res.statusCode = 200
       res.json({ encounter })
+      break
+    case "PATCH":
+      const patch = PatchForEvent(req.body.patch)
+      if (!patch) {
+        res.status(422).send("")
+        return
+      }
+      console.log(`UPDATE Encounter SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}') WHERE id = ${req.body.encounterId}`)
+      await prisma.$executeRawUnsafe(
+        `UPDATE Encounter
+        SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}')
+        WHERE id = ?;`,
+        req.body.encounterId,
+      )
+      res.statusCode = 200
+      res.json({patch})
       break
     case "DELETE":
       await prisma.encounter.delete({
