@@ -3,6 +3,7 @@ import type { Session } from "next-auth"
 import { useSession, getSession } from "next-auth/react"
 import Layout from "components/layout"
 import prisma from "lib/prisma"
+import { EventAction, Event } from "lib/game_state"
 import { useRouter } from "next/router"
 import { useState, useRef, useReducer } from "react"
 import Hand from "components/campaign/hand"
@@ -43,20 +44,20 @@ export default function Page(props) {
     setState({ action: Actions.MoveMouse, value: { x, y } })
   }
 
-  const updateToken = async (tokenId, token) => {
-    const res = await fetch(`/api/encounter/${props.campaign.id}/token`, {
+  const updateToken = async (event: Event) => {
+    const res = await fetch(`/api/encounter/${props.campaign.id}`, {
       body: JSON.stringify({
         encounterId: props.encounter.id,
-        token,
-        tokenId,
+        patch: event,
       }),
       headers: {
         "Content-Type": "application/json",
       },
-      method: "PUT",
+      method: "PATCH",
     })
     if (res.ok) {
       setState({ action: Actions.Synced })
+      return res.json()
     }
   }
 
@@ -97,7 +98,11 @@ export default function Page(props) {
               visualState.cursor?.pos
             ) {
               setState({ action: Actions.FinishPlacing })
-              updateToken(visualState.placingTokenId, visualState.cursor)
+              updateToken({
+                action: EventAction.UpdateTokenPos,
+                id: visualState.placingTokenId,
+                pos: visualState.cursor.pos,
+              })
             }
           }}
         >
@@ -115,8 +120,7 @@ export default function Page(props) {
                 }}
               />
             )}
-            {
-              Object.keys(gameState.characters)
+            {Object.keys(gameState.characters)
               .map((id) => ({ tokenId: id, token: gameState.tokens[id] }))
               .filter(({ tokenId, token }) => token?.pos)
               .map(({ tokenId, token }) => (
@@ -131,14 +135,14 @@ export default function Page(props) {
                   }
                   style={{
                     position: "absolute",
-                    opacity: visualState.placingTokenId == tokenId ? "50%" : "100%",
+                    opacity:
+                      visualState.placingTokenId == tokenId ? "50%" : "100%",
                     width: "21px",
                     height: "21px",
                     transform: `translate(${token.pos?.x}px, ${token.pos?.y}px)`,
                   }}
                 />
-              ))
-            }
+              ))}
           </div>
           <div className="flex-none w-30">
             <TurnOrder

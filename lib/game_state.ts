@@ -138,20 +138,24 @@ export function ApplyEvent(state: GameState, event: Event): GameState {
   return newState
 }
 
-export type Event = UpdateTokenPosEvent | UpdateTokenColorEvent | AddCharacterEvent | UpdateCharacterNameEvent
+export type Event =
+  | UpdateTokenPosEvent
+  | UpdateTokenColorEvent
+  | AddCharacterEvent
+  | UpdateCharacterNameEvent
 
 export enum EventAction {
-  UpdateTokenPos = "UpdateTokenPos"
-  UpdateTokenColor = "UpdateTokenColor"
-  AddCharacter = "AddCharacter"
-  UpdateCharacterName = "UpdateCharacterName"
-  NextTurn = "NextTurn"
+  UpdateTokenPos = "UpdateTokenPos",
+  UpdateTokenColor = "UpdateTokenColor",
+  AddCharacter = "AddCharacter",
+  UpdateCharacterName = "UpdateCharacterName",
+  NextTurn = "NextTurn",
 }
 
 interface UpdateTokenPosEvent {
   action: EventAction.UpdateTokenPos
   id: string
-  pos: { x: number, y: number }
+  pos: { x: number; y: number }
 }
 
 interface UpdateTokenColorEvent {
@@ -174,48 +178,48 @@ interface UpdateCharacterNameEvent {
 
 export function PatchForEvent(event: Event) {
   switch (event.action) {
-  case EventAction.UpdateTokenPos:
-    return {
-      tokens: {
-        [event.id]: {
-          pos: event.pos,
+    case EventAction.UpdateTokenPos:
+      return {
+        tokens: {
+          [event.id]: {
+            pos: event.pos,
+          },
         },
-      },
-    }
-  case EventAction.UpdateTokenColor:
-    return {
-      tokens: {
-        [event.id]: {
-          color: event.color,
+      }
+    case EventAction.UpdateTokenColor:
+      return {
+        tokens: {
+          [event.id]: {
+            color: event.color,
+          },
         },
-      },
-    }
-  case EventAction.AddCharacter:
-    const id = uuidv4()
-    return {
-      characters: {
-        [id]: {
-          name: event.name,
-          health: 100,
-          npc: true,
+      }
+    case EventAction.AddCharacter:
+      const id = event.id || uuidv4()
+      return {
+        characters: {
+          [id]: {
+            name: event.name,
+            health: 100,
+            npc: true,
+          },
         },
-      },
-      tokens: {
-        [id]: {
-          color: "blue-500",
+        tokens: {
+          [id]: {
+            color: "blue-500",
+          },
         },
-      },
-      decks: {
-        [id]: {}
-      },
-    }
-  case EventAction.UpdateCharacterName:
-    return {
-      characters: {
-        [event.id]: {
-          name: event.name,
+        decks: {
+          [id]: {},
         },
-      },
-    }
+      }
+    case EventAction.UpdateCharacterName:
+      return {
+        characters: {
+          [event.id]: {
+            name: event.name,
+          },
+        },
+      }
   }
 }

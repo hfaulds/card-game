@@ -14,46 +14,7 @@ export default function TurnOrder({
   const [renamingId, setRenamingId] = useState<string | undefined>()
   const [newName, setNewName] = useState("")
 
-  const addCharacter = async () => {
-    const res = await fetch(
-      `/api/encounter/${currentUserCampaign.campaignId}/character`,
-      {
-        body: JSON.stringify({
-          encounterId: encounter.id,
-          name: "New Character",
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      }
-    )
-    if (!res.ok) {
-      return
-    }
-    const character = (await res.json()).character
-    setState({ action: Actions.AddCharacter, value: character })
-  }
-
-  const renameCharacter = async (id, name) => {
-    const res = await fetch(
-      `/api/encounter/${currentUserCampaign.campaignId}`,
-      {
-        body: JSON.stringify({
-          encounterId: encounter.id,
-          patch: {
-            action: EventAction.UpdateCharacterName,
-            id: id,
-            name: name,
-          }
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "PATCH",
-      }
-    )
-  }
+  const renameCharacter = async (id, name) => {}
 
   const endTurn = () => {}
 
@@ -70,12 +31,16 @@ export default function TurnOrder({
                 value={newName}
                 autoFocus
                 onChange={(e) => setNewName(e.target.value)}
-                onBlur={() => {
+                onBlur={async () => {
                   setState({
                     action: Actions.RenameCharacter,
                     value: { id, name: newName },
                   })
-                  renameCharacter(id, newName)
+                  await updateToken({
+                    action: EventAction.UpdateCharacterName,
+                    id,
+                    name: newName,
+                  })
                   setRenamingId(undefined)
                 }}
               />
@@ -116,8 +81,9 @@ export default function TurnOrder({
                   action: Actions.UpdateTokenColor,
                   value: { id, color },
                 })
-                updateToken(id, {
-                  ...gameState.tokens[id],
+                updateToken({
+                  action: EventAction.UpdateTokenColor,
+                  id,
                   color,
                 })
               }}
@@ -129,7 +95,24 @@ export default function TurnOrder({
       {currentUserCampaign.admin && (
         <>
           <button className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
-            <span className="font-small" onClick={addCharacter}>
+            <span
+              className="font-small"
+              onClick={async () => {
+                const resp = await updateToken({
+                  action: EventAction.AddCharacter,
+                  name: "New Character",
+                })
+                if (resp) {
+                  const [id, { name }] = Object.entries(
+                    resp.patch.characters as Characters
+                  )[0]
+                  setState({
+                    action: Actions.AddCharacter,
+                    value: { id, name },
+                  })
+                }
+              }}
+            >
               Add Character
             </span>
           </button>

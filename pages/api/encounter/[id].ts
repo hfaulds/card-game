@@ -88,15 +88,14 @@ export default async function protectedHandler(
         res.status(422).send("")
         return
       }
-      console.log(`UPDATE Encounter SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}') WHERE id = ${req.body.encounterId}`)
       await prisma.$executeRawUnsafe(
         `UPDATE Encounter
         SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}')
         WHERE id = ?;`,
-        req.body.encounterId,
+        req.body.encounterId
       )
       res.statusCode = 200
-      res.json({patch})
+      res.json({ patch })
       break
     case "DELETE":
       await prisma.encounter.delete({
