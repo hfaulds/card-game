@@ -8,6 +8,7 @@ export const Actions = {
   Synced: "Synced",
   AddCharacter: "AddCharacter",
   RenameCharacter: "RenameCharacter",
+  NextTurn: "NextTurn",
 }
 
 export interface State {
@@ -117,6 +118,15 @@ export function StateReducer(state: State, event): State {
           action: EventAction.UpdateCharacterName,
           id: event.value.id,
           name: event.value.name,
+        }),
+        visualState,
+      }
+    case Actions.NextTurn:
+      return {
+        gameState: ApplyEvent(gameState, {
+          action: EventAction.NextTurn,
+          turn: event.value.turn,
+          cards: event.value.cards,
         }),
         visualState,
       }

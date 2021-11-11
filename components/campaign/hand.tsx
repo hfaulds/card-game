@@ -1,7 +1,6 @@
 import { useState } from "react"
 
-export default function Hand(props) {
-  const [cards, setCards] = useState(props.cards)
+export default function Hand({ cards, playCard }) {
   const [hovered, setHover] = useState<any>(null)
   const [selected, setSelected] = useState<null | any>(null)
 

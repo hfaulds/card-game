@@ -4,6 +4,7 @@ import { escape as escapeSQL } from "sqlstring"
 import merge from "ts-deepmerge"
 
 export interface GameState {
+  version: number
   characters: Characters
   cards: { [key: string]: CardPiles }
   tokens: Tokens
@@ -90,6 +91,7 @@ export function NewGameState(userCampaigns, decks: Decks): GameState {
     }
   }, {})
   return {
+    version: 0,
     characters: characters,
     tokens: tokens,
     cards: cards,
@@ -133,8 +135,8 @@ function shuffle(array) {
 }
 
 export function ApplyEvent(state: GameState, event: Event): GameState {
-  const patch = PatchForEvent(event)
-  const newState = merge(state, patch)
+  const patch = PatchForEvent(state, event)
+  const newState = merge.withOptions({ mergeArrays: false }, state, patch)
   return newState
 }
 
@@ -143,6 +145,7 @@ export type Event =
   | UpdateTokenColorEvent
   | AddCharacterEvent
   | UpdateCharacterNameEvent
+  | NextTurnEvent
 
 export enum EventAction {
   UpdateTokenPos = "UpdateTokenPos",
@@ -176,7 +179,13 @@ interface UpdateCharacterNameEvent {
   name: string
 }
 
-export function PatchForEvent(event: Event) {
+interface NextTurnEvent {
+  action: EventAction.NextTurn
+  turn?: string
+  cards?: CardPiles
+}
+
+export function PatchForEvent(state: GameState, event: Event) {
   switch (event.action) {
     case EventAction.UpdateTokenPos:
       return {
@@ -212,6 +221,13 @@ export function PatchForEvent(event: Event) {
         decks: {
           [id]: {},
         },
+        cards: {
+          [id]: {
+            draw: [],
+            discard: [],
+            hand: [],
+          },
+        },
       }
     case EventAction.UpdateCharacterName:
       return {
@@ -219,6 +235,16 @@ export function PatchForEvent(event: Event) {
           [event.id]: {
             name: event.name,
           },
+        },
+      }
+    case EventAction.NextTurn:
+      const ids = Object.keys(state.characters)
+      const turn = event.turn || ids[(ids.indexOf(state.turn) + 1) % ids.length]
+      const cards = event.cards || DrawHand(state.cards[turn])
+      return {
+        turn: turn,
+        cards: {
+          [turn]: cards,
         },
       }
   }

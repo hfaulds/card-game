@@ -83,19 +83,40 @@ export default async function protectedHandler(
       res.json({ encounter })
       break
     case "PATCH":
-      const patch = PatchForEvent(req.body.patch)
-      if (!patch) {
-        res.status(422).send("")
+      await prisma.$transaction(async (prisma) => {
+        await prisma.$executeRawUnsafe(
+          `UPDATE Encounter
+          SET state = JSON_SET(state, '$.version', JSON_EXTRACT(state, '$.version') + 1)
+          WHERE id = ?;`,
+          req.body.encounterId
+        )
+        const encounter = await prisma.encounter.findUnique({
+          where: {
+            id: req.body.encounterId,
+          },
+        })
+        if (!encounter) {
+          res.status(404).send("")
+          return
+        }
+        const patch = PatchForEvent(
+          encounter.state as unknown as GameState,
+          req.body.patch
+        )
+        if (!patch) {
+          res.status(422).send("")
+          return
+        }
+        await prisma.$executeRawUnsafe(
+          `UPDATE Encounter
+          SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}')
+          WHERE id = ?;`,
+          req.body.encounterId
+        )
+        res.statusCode = 200
+        res.json({ patch })
         return
-      }
-      await prisma.$executeRawUnsafe(
-        `UPDATE Encounter
-        SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}')
-        WHERE id = ?;`,
-        req.body.encounterId
-      )
-      res.statusCode = 200
-      res.json({ patch })
+      })
       break
     case "DELETE":
       await prisma.encounter.delete({

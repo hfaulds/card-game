@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity"]
+  previewFeatures = ["referentialIntegrity", "interactiveTransactions"]
 }
 
 datasource db {
@@ -83,10 +83,10 @@ enum EncounterVisibility {
 }
 
 model Encounter {
-  id         String          @id @default(cuid())
-  campaign   Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  id         String              @id @default(cuid())
+  campaign   Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   campaignId String
   name       String
   state      Json
-  visibility     EncounterVisibility @default(DRAFT)
+  visibility EncounterVisibility @default(DRAFT)
 }

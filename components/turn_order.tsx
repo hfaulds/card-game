@@ -1,5 +1,5 @@
 import { Actions } from "lib/reducers/state"
-import { Characters, EventAction } from "lib/game_state"
+import { CardPiles, Characters, EventAction } from "lib/game_state"
 import ColorPicker from "components/color_picker"
 import { CogIcon, LocationMarkerIcon } from "@heroicons/react/outline"
 import { useState } from "react"
@@ -16,7 +16,17 @@ export default function TurnOrder({
 
   const renameCharacter = async (id, name) => {}
 
-  const endTurn = () => {}
+  const endTurn = async () => {
+    const resp = await updateToken({ action: EventAction.NextTurn })
+    if (resp) {
+      const turn = resp.patch.turn
+      const cards = Object.values(resp.patch.cards as CardPiles)[0]
+      setState({
+        action: Actions.NextTurn,
+        value: { turn, cards },
+      })
+    }
+  }
 
   return (
     <div className="border-solid border-4 bg-white p-2">
@@ -47,7 +57,7 @@ export default function TurnOrder({
             ) : (
               <div
                 className={`${
-                  id == currentUserCampaign.id && "font-bold"
+                  id == gameState.turn && "font-bold"
                 } inline-block w-32 truncate`}
                 onClick={() => {
                   setRenamingId(id)
