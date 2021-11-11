@@ -102,7 +102,7 @@ export function NewGameState(userCampaigns, decks: Decks): GameState {
 export function DrawHand(cards: CardPiles): CardPiles {
   var draw, hand, discard
   if (cards.draw.length >= handSize) {
-    draw = cards.draw.slice(handSize)
+    draw = shuffle(cards.draw.slice(handSize))
     hand = cards.draw.slice(0, handSize - 1)
     discard = cards.hand.concat(cards.discard)
   } else {
@@ -136,7 +136,7 @@ function shuffle(array) {
 
 export function ApplyEvent(state: GameState, event: Event): GameState {
   const patch = PatchForEvent(state, event)
-  const newState = merge.withOptions({ mergeArrays: false }, state, patch)
+  const newState = merge.withOptions({ mergeArrays: false }, state, patch.patch)
   return newState
 }
 
@@ -185,66 +185,92 @@ interface NextTurnEvent {
   cards?: CardPiles
 }
 
-export function PatchForEvent(state: GameState, event: Event) {
+interface Patch {
+  permission: ({ id: string, admin: boolean }) => boolean
+  patch: any
+  result?: any
+}
+
+export function PatchForEvent(state: GameState, event: Event): Patch {
   switch (event.action) {
     case EventAction.UpdateTokenPos:
       return {
-        tokens: {
-          [event.id]: {
-            pos: event.pos,
+        patch: {
+          tokens: {
+            [event.id]: {
+              pos: event.pos,
+            },
           },
         },
+        permission: (u) => u.id == event.id || u.admin,
       }
     case EventAction.UpdateTokenColor:
       return {
-        tokens: {
-          [event.id]: {
-            color: event.color,
+        patch: {
+          tokens: {
+            [event.id]: {
+              color: event.color,
+            },
           },
         },
+        permission: (u) => u.id == event.id || u.admin,
       }
     case EventAction.AddCharacter:
       const id = event.id || uuidv4()
       return {
-        characters: {
-          [id]: {
-            name: event.name,
-            health: 100,
-            npc: true,
+        patch: {
+          characters: {
+            [id]: {
+              name: event.name,
+              health: 100,
+              npc: true,
+            },
+          },
+          tokens: {
+            [id]: {
+              color: "blue-500",
+            },
+          },
+          decks: {
+            [id]: {},
+          },
+          cards: {
+            [id]: {
+              draw: [],
+              discard: [],
+              hand: [],
+            },
           },
         },
-        tokens: {
-          [id]: {
-            color: "blue-500",
-          },
-        },
-        decks: {
-          [id]: {},
-        },
-        cards: {
-          [id]: {
-            draw: [],
-            discard: [],
-            hand: [],
-          },
-        },
+        permission: (u) => u.admin,
+        result: { id },
       }
     case EventAction.UpdateCharacterName:
       return {
-        characters: {
-          [event.id]: {
-            name: event.name,
+        patch: {
+          characters: {
+            [event.id]: {
+              name: event.name,
+            },
           },
         },
+        permission: (u) => u.id == event.id || u.admin,
       }
     case EventAction.NextTurn:
       const ids = Object.keys(state.characters)
       const turn = event.turn || ids[(ids.indexOf(state.turn) + 1) % ids.length]
       const cards = event.cards || DrawHand(state.cards[turn])
       return {
-        turn: turn,
-        cards: {
-          [turn]: cards,
+        patch: {
+          turn: turn,
+          cards: {
+            [turn]: cards,
+          },
+        },
+        permission: (u) => u.id == turn || u.admin,
+        result: {
+          turn,
+          cards,
         },
       }
   }

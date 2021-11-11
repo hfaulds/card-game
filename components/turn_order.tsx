@@ -17,8 +17,7 @@ export default function TurnOrder({
   const endTurn = async () => {
     const resp = await updateToken({ action: EventAction.NextTurn })
     if (resp) {
-      const turn = resp.patch.turn
-      const cards = Object.values(resp.patch.cards as CardPiles)[0]
+      const { turn, cards } = resp.result
       setState({
         action: Actions.NextTurn,
         value: { turn, cards },
@@ -41,7 +40,7 @@ export default function TurnOrder({
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyUp={(e) => {
                   if (e.key === "Enter") {
-                    (e.target as HTMLElement).blur()
+                    ;(e.target as HTMLElement).blur()
                   }
                 }}
                 onBlur={async () => {
@@ -113,14 +112,13 @@ export default function TurnOrder({
             <span
               className="font-small"
               onClick={async () => {
+                const name = "New Character"
                 const resp = await updateToken({
                   action: EventAction.AddCharacter,
-                  name: "New Character",
+                  name,
                 })
                 if (resp) {
-                  const [id, { name }] = Object.entries(
-                    resp.patch.characters as Characters
-                  )[0]
+                  const id = resp.result.id
                   setState({
                     action: Actions.AddCharacter,
                     value: { id, name },

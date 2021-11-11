@@ -107,14 +107,18 @@ export default async function protectedHandler(
           res.status(422).send("")
           return
         }
+        if (!patch.permission(currentUserCampaign)) {
+          res.status(403).send("")
+          return
+        }
         await prisma.$executeRawUnsafe(
           `UPDATE Encounter
-          SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch)}')
+          SET state = JSON_MERGE_PATCH(state, '${JSON.stringify(patch.patch)}')
           WHERE id = ?;`,
           req.body.encounterId
         )
         res.statusCode = 200
-        res.json({ patch })
+        res.json({ result: patch.result })
         return
       })
       break

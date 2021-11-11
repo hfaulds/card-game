@@ -57,7 +57,7 @@ export default function Page(props) {
     })
     if (res.ok) {
       setState({ action: Actions.Synced })
-      return res.json()
+      return await res.json()
     }
   }
 
