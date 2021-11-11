@@ -60,7 +60,7 @@ export default function Hand({ cards, playCard }) {
               }),
               ...(selected?.instanceId == card.instanceId && {
                 zIndex: 2,
-                transform: "scale(1.2) translate(0rem, -5rem)",
+                transform: "scale(1.2) translate(0rem, -300px)",
               }),
             }}
             onClick={() => select(card, i)}
