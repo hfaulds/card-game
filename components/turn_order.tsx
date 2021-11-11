@@ -14,8 +14,6 @@ export default function TurnOrder({
   const [renamingId, setRenamingId] = useState<string | undefined>()
   const [newName, setNewName] = useState("")
 
-  const renameCharacter = async (id, name) => {}
-
   const endTurn = async () => {
     const resp = await updateToken({ action: EventAction.NextTurn })
     if (resp) {
@@ -41,16 +39,23 @@ export default function TurnOrder({
                 value={newName}
                 autoFocus
                 onChange={(e) => setNewName(e.target.value)}
+                onKeyUp={(e) => {
+                  if (e.key === "Enter") {
+                    (e.target as HTMLElement).blur()
+                  }
+                }}
                 onBlur={async () => {
-                  setState({
-                    action: Actions.RenameCharacter,
-                    value: { id, name: newName },
-                  })
-                  await updateToken({
-                    action: EventAction.UpdateCharacterName,
-                    id,
-                    name: newName,
-                  })
+                  if (newName != character.name) {
+                    setState({
+                      action: Actions.RenameCharacter,
+                      value: { id, name: newName },
+                    })
+                    await updateToken({
+                      action: EventAction.UpdateCharacterName,
+                      id,
+                      name: newName,
+                    })
+                  }
                   setRenamingId(undefined)
                 }}
               />
