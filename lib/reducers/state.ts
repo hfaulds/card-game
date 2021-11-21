@@ -1,4 +1,5 @@
-import { ApplyEvent, EventAction, GameState } from "lib/game_state"
+import { ApplyEvent, EventAction, GameState, Pos } from "lib/game_state"
+import { Cards } from "lib/cards"
 
 export const Actions = {
   MoveMouse: "MoveMouse",
@@ -9,6 +10,9 @@ export const Actions = {
   AddCharacter: "AddCharacter",
   RenameCharacter: "RenameCharacter",
   NextTurn: "NextTurn",
+  SelectCard: "SelectCard",
+  DeselectCard: "DeselectCard",
+  PlayCard: "PlayCard",
 }
 
 export interface State {
@@ -23,6 +27,10 @@ export interface State {
       color: string
     }
     placingTokenId?: string
+    selectedCard?: {
+      cardInstanceId: string
+      validTargets: Pos[]
+    }
     renamingCharacterId?: string
     syncing: number
   }
@@ -129,6 +137,42 @@ export function StateReducer(state: State, event): State {
           cards: event.value.cards,
         }),
         visualState,
+      }
+    case Actions.SelectCard:
+      const card = Cards.find(({ id }) => id == event.value.selected.id)
+      if (!card?.validTargets) {
+        return { gameState, visualState }
+      }
+      return {
+        gameState,
+        visualState: {
+          ...visualState,
+          selectedCard: {
+            validTargets: card.validTargets(gameState),
+            cardInstanceId: event.value.selected.instanceId,
+          },
+        },
+      }
+    case Actions.DeselectCard:
+      return {
+        gameState,
+        visualState: {
+          ...visualState,
+          selectedCard: undefined,
+        },
+      }
+    case Actions.PlayCard:
+      return {
+        gameState: ApplyEvent(gameState, {
+          action: EventAction.PlayCard,
+          target: event.value.target,
+          player: event.value.player,
+          card: event.value.card,
+        }),
+        visualState: {
+          ...visualState,
+          selectedCard: undefined,
+        },
       }
   }
   return state

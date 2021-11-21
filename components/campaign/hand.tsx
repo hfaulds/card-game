@@ -1,6 +1,7 @@
 import { useState } from "react"
+import { Cards } from "lib/cards"
 
-export default function Hand({ cards, playCard }) {
+export default function Hand(props) {
   const [hovered, setHover] = useState<any>(null)
   const [selected, setSelected] = useState<null | any>(null)
 
@@ -15,10 +16,11 @@ export default function Hand({ cards, playCard }) {
     }
     setHover(null)
     setSelected({ ...card, pos: i })
+    props.select(card)
   }
 
   const getTransform = (pos) => {
-    const unselectedCards = cards.length - (!!selected ? 1 : 0)
+    const unselectedCards = props.cards.length - (!!selected ? 1 : 0)
     // position relative to center adjusted for selected card
     const relpos =
       (pos > selected?.pos ? pos - 1 : pos) -
@@ -43,7 +45,7 @@ export default function Hand({ cards, playCard }) {
 
   return (
     <div className="w-8/12 mx-auto px-4 sm:px-6">
-      {cards.map((card, i) => {
+      {props.cards.map((card, i) => {
         const { x, y, rot } = getTransform(i)
         return (
           <div

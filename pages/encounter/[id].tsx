@@ -35,7 +35,6 @@ export default function Page(props) {
   const currentUserCampaign = props.campaign.users.find(
     (userCampaign) => userCampaign.userEmail == session?.user?.email
   )
-  const playCard = () => {}
 
   const mouseMove = (e) => {
     const rect = ref!.current!.getBoundingClientRect()
@@ -143,6 +142,29 @@ export default function Page(props) {
                   }}
                 />
               ))}
+            {visualState.selectedCard?.validTargets?.map((pos, i) => (
+              <div
+                className="border-solid border-2 border-red-400 bg-red-300"
+                key={i}
+                style={{
+                  position: "absolute",
+                  opacity: "50%",
+                  width: "21px",
+                  height: "21px",
+                  transform: `translate(${pos?.x}px, ${pos?.y}px)`,
+                }}
+                onClick={() =>
+                  setState({
+                    action: Actions.PlayCard,
+                    value: {
+                      target: pos,
+                      player: currentUserCampaign.id,
+                      card: visualState.selectedCard!.cardInstanceId,
+                    },
+                  })
+                }
+              />
+            ))}
           </div>
           <div className="flex-none w-30">
             <TurnOrder
@@ -162,7 +184,10 @@ export default function Page(props) {
       <div className="fixed bottom-0 h-0 w-full text-center">
         <Hand
           cards={gameState.cards[currentUserCampaign.id].hand}
-          playCard={playCard}
+          select={(card) =>
+            setState({ action: Actions.SelectCard, value: { selected: card } })
+          }
+          deselect={(card) => setState({ action: Actions.DeselectCard })}
         />
       </div>
     </>

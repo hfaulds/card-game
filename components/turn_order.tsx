@@ -71,6 +71,7 @@ export default function TurnOrder({
                 {character.name}
               </div>
             )}
+            <div className="inline-block"> {character.health} </div>
             {(id == currentUserCampaign.id || currentUserCampaign.admin) && (
               <>
                 <button

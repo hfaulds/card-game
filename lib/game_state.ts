@@ -1,4 +1,4 @@
-import { Card, Cards } from "lib/cards"
+import { Card, Cards, PlayCard } from "lib/cards"
 import { v4 as uuidv4 } from "uuid"
 import { escape as escapeSQL } from "sqlstring"
 import merge from "ts-deepmerge"
@@ -44,10 +44,12 @@ export interface Tokens {
 
 export interface Token {
   color: string
-  pos?: {
-    x: number
-    y: number
-  }
+  pos?: Pos
+}
+
+export interface Pos {
+  x: number
+  y: number
 }
 
 const handSize = 10
@@ -136,6 +138,9 @@ function shuffle(array) {
 
 export function ApplyEvent(state: GameState, event: Event): GameState {
   const patch = PatchForEvent(state, event)
+  if (!patch?.patch) {
+    return state
+  }
   const newState = merge.withOptions({ mergeArrays: false }, state, patch.patch)
   return newState
 }
@@ -146,6 +151,7 @@ export type Event =
   | AddCharacterEvent
   | UpdateCharacterNameEvent
   | NextTurnEvent
+  | PlayCardEvent
 
 export enum EventAction {
   UpdateTokenPos = "UpdateTokenPos",
@@ -153,6 +159,7 @@ export enum EventAction {
   AddCharacter = "AddCharacter",
   UpdateCharacterName = "UpdateCharacterName",
   NextTurn = "NextTurn",
+  PlayCard = "PlayCard",
 }
 
 interface UpdateTokenPosEvent {
@@ -183,6 +190,13 @@ interface NextTurnEvent {
   action: EventAction.NextTurn
   turn?: string
   cards?: CardPiles
+}
+
+export interface PlayCardEvent {
+  action: EventAction.PlayCard
+  player: string
+  card: string
+  target: Pos
 }
 
 interface Patch {
@@ -273,5 +287,21 @@ export function PatchForEvent(state: GameState, event: Event): Patch {
           cards,
         },
       }
+    case EventAction.PlayCard:
+      return (() => {
+        const patch = PlayCard(state, event)
+        return {
+          patch,
+          permission: (u) => {
+            if (!(u.id == event.player || u.admin)) {
+              return false
+            }
+            if (!patch) {
+              return false
+            }
+            return true
+          },
+        }
+      })()
   }
 }

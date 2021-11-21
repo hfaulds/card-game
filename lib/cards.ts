@@ -1,12 +1,80 @@
+import {
+  CardInstance,
+  Character,
+  GameState,
+  PlayCardEvent,
+  Pos,
+} from "lib/game_state"
+
 export interface Card {
   id: string
   name: string
+  validTargets?: (state: GameState) => Pos[]
+  play?: (state: GameState, event: PlayCardEvent, card: CardInstance) => any
+}
+
+export const PlayCard = (state: GameState, event: PlayCardEvent) => {
+  const cards = state.cards[event.player]
+  if (!cards) {
+    return
+  }
+  const cardInstance = cards.hand.find(
+    ({ instanceId }) => instanceId == event.card
+  )
+  if (!cardInstance) {
+    return
+  }
+  const card = Cards.find(({ id }) => id == cardInstance.id)
+  if (!card?.play) {
+    return
+  }
+  return card.play(state, event, cardInstance)
+}
+
+const findCharacter = (state: GameState, pos: Pos) => {
+  const entry = Object.entries(state.tokens).find(
+    ([id, token]) => token.pos == pos
+  )
+  if (!entry) {
+    return
+  }
+  const [target] = entry
+  if (!state.characters[target]) {
+    return
+  }
+  return target
 }
 
 export const Cards: Card[] = [
-  { id: "0", name: "lorem" },
-  { id: "1", name: "ipsum" },
-  { id: "2", name: "dolor" },
+  {
+    id: "0",
+    name: "melee",
+    validTargets: (state: GameState) =>
+      Object.values(state.tokens)
+        .map(({ pos }) => pos)
+        .filter((pos) => pos) as Pos[],
+    play: (state, event, card) => {
+      const target = findCharacter(state, event.target)
+      if (!target) {
+        return
+      }
+      return {
+        characters: {
+          [target]: {
+            health: state.characters[target].health - 10,
+          },
+        },
+        cards: {
+          [event.player]: {
+            hand: state.cards[event.player].hand.filter((c) => c !== card),
+            discard: state.cards[event.player].discard.concat(card),
+          },
+        },
+      }
+    },
+  },
+  { id: "1", name: "heal" },
+  { id: "2", name: "projectile" },
   { id: "3", name: "amet" },
   { id: "4", name: "consectetur" },
   { id: "5", name: "adipiscing" },
