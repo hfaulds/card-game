@@ -1,29 +1,57 @@
 import { useState } from "react"
 import { Cards } from "lib/cards"
 
+function Card({ title, transform, zIndex, onHover, onSelect }) {
+  return (
+    <div
+      className="select-none absolute inline-block border-solid border-4 bg-white shadow w-40 h-52 hover:border-gray-300"
+      style={{
+        marginLeft: "-5rem",
+        transformOrigin: "50%",
+        transform: transform,
+        transition: "transform 200ms",
+        zIndex: zIndex,
+      }}
+      onClick={() => onSelect && onSelect()}
+      onMouseOver={() => onHover && onHover(true)}
+      onMouseOut={() => onHover && onHover(false)}
+    >
+      <p className="font-bold">{title}</p>
+      <p> adfasdfasdfasdf </p>
+      <p> adfasdfasdfasdf </p>
+      <p> adfasdfasdfasdf </p>
+      <p> adfasdfasdfasdf </p>
+    </div>
+  )
+}
+
 export default function Hand(props) {
   const [hovered, setHover] = useState<any>(null)
-  const [selected, setSelected] = useState<null | any>(null)
 
   const hover = (card, i) => {
     setHover({ ...card, pos: i })
   }
 
-  const select = (card, i) => {
-    if (selected?.instanceId == card.instanceId) {
-      setSelected(null)
-      return
+  const getHandTransform = (card, pos) => {
+    if (props.selected == card.instanceId) {
+      return "scale(1.2) translate(0px, -300px)"
     }
-    setHover(null)
-    setSelected({ ...card, pos: i })
-    props.select(card)
+    const { x, y, rot } = getUnselectedHandTransform(pos)
+    if (hovered?.instanceId == card.instanceId) {
+      return `scale(1.1) translate(${x}px, ${y}px) rotate(${rot}deg) translate(0, -50px)`
+    }
+    return `translate(${x}px, ${y}px) rotate(${rot}deg)`
   }
 
-  const getTransform = (pos) => {
-    const unselectedCards = props.cards.length - (!!selected ? 1 : 0)
+  const selectedCardPos = props.hand.findIndex(
+    (c) => c.instanceId == props.selected
+  )
+
+  const getUnselectedHandTransform = (pos) => {
+    const unselectedCards = props.hand.length - (!!props.selected ? 1 : 0)
     // position relative to center adjusted for selected card
     const relpos =
-      (pos > selected?.pos ? pos - 1 : pos) -
+      (props.selected && pos > selectedCardPos ? pos - 1 : pos) -
       Math.floor(unselectedCards / 2) +
       (1 - (unselectedCards % 2)) * 0.5
     // distribute evenly across x axis
@@ -45,38 +73,37 @@ export default function Hand(props) {
 
   return (
     <div className="w-8/12 mx-auto px-4 sm:px-6">
-      {props.cards.map((card, i) => {
-        const { x, y, rot } = getTransform(i)
-        return (
-          <div
-            key={card.instanceId}
-            className="select-none absolute inline-block border-solid border-4 bg-white shadow w-40 h-52 hover:border-gray-300"
-            style={{
-              marginLeft: "-5rem",
-              transformOrigin: "50%",
-              transform: `translate(${x}px, ${y}px) rotate(${rot}deg)`,
-              transition: "transform 200ms",
-              ...(hovered?.instanceId == card?.instanceId && {
-                zIndex: 1,
-                transform: `scale(1.1) translate(${x}px, ${y}px) rotate(${rot}deg) translate(0, -50px)`,
-              }),
-              ...(selected?.instanceId == card.instanceId && {
-                zIndex: 2,
-                transform: "scale(1.2) translate(0rem, -300px)",
-              }),
-            }}
-            onClick={() => select(card, i)}
-            onMouseOver={() => hover(card, i)}
-            onMouseOut={() => setHover(null)}
-          >
-            <p className="font-bold">{card.name}</p>
-            <p> adfasdfasdfasdf </p>
-            <p> adfasdfasdfasdf </p>
-            <p> adfasdfasdfasdf </p>
-            <p> adfasdfasdfasdf </p>
-          </div>
-        )
-      })}
+      {props.hand.map((card, pos) => (
+        <Card
+          key={card.instanceId}
+          title={card.name}
+          transform={getHandTransform(card, pos)}
+          zIndex={
+            props.selected == card.instanceId
+              ? 2
+              : hovered?.instanceId == card.instanceId
+              ? 1
+              : null
+          }
+          onHover={(t) => (t ? hover(card, pos) : setHover(null))}
+          onSelect={() => {
+            props.deselect()
+            if (card.instanceId != props.selected) {
+              props.select(card)
+            }
+          }}
+        />
+      ))}
+      {props.discard.map((card, i) => (
+        <Card
+          key={card.instanceId}
+          title={card.name}
+          transform={`translate(${300 + i * 5}px, ${i * 5 - 250}px)`}
+          zIndex={0}
+          onHover={undefined}
+          onSelect={undefined}
+        />
+      ))}
     </div>
   )
 }

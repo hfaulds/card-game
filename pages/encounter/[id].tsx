@@ -157,7 +157,7 @@ export default function Page(props) {
                   height: "21px",
                   transform: `translate(${pos!.x * 21}px, ${pos!.y * 21}px)`,
                 }}
-                onClick={() =>
+                onClick={() => {
                   setState({
                     action: Actions.PlayCard,
                     value: {
@@ -166,7 +166,13 @@ export default function Page(props) {
                       card: visualState.selectedCard!.cardInstanceId,
                     },
                   })
-                }
+                  updateToken({
+                    action: EventAction.PlayCard,
+                    target: pos,
+                    player: currentUserCampaign.id,
+                    card: visualState.selectedCard!.cardInstanceId,
+                  })
+                }}
               />
             ))}
           </div>
@@ -187,11 +193,14 @@ export default function Page(props) {
       </Layout>
       <div className="fixed bottom-0 h-0 w-full text-center">
         <Hand
-          cards={gameState.cards[currentUserCampaign.id].hand}
+          draw={gameState.cards[currentUserCampaign.id].draw}
+          hand={gameState.cards[currentUserCampaign.id].hand}
+          discard={gameState.cards[currentUserCampaign.id].discard}
+          selected={visualState.selectedCard?.cardInstanceId}
           select={(card) =>
             setState({ action: Actions.SelectCard, value: { selected: card } })
           }
-          deselect={(card) => setState({ action: Actions.DeselectCard })}
+          deselect={() => setState({ action: Actions.DeselectCard })}
         />
       </div>
     </>
