@@ -51,8 +51,8 @@ export function StateReducer(state: State, event): State {
           cursor: {
             ...visualState.cursor,
             pos: {
-              x: x - (x % 21),
-              y: y - (y % 21),
+              x: Math.floor(x),
+              y: Math.floor(y),
             },
           },
         },

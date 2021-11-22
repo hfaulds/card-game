@@ -25,7 +25,13 @@ export const PlayCard = (state: GameState, event: PlayCardEvent) => {
     return
   }
   const card = Cards.find(({ id }) => id == cardInstance.id)
-  if (!card?.play) {
+  if (!card || !card.validTargets || !card.play) {
+    return
+  }
+  const validTargets = card.validTargets(state)
+  if (
+    !validTargets.some(({ x, y }) => event.target.x == x && event.target.y == y)
+  ) {
     return
   }
   return card.play(state, event, cardInstance)
@@ -33,7 +39,7 @@ export const PlayCard = (state: GameState, event: PlayCardEvent) => {
 
 const findCharacter = (state: GameState, pos: Pos) => {
   const entry = Object.entries(state.tokens).find(
-    ([id, token]) => token.pos == pos
+    ([id, token]) => token.pos && token.pos.x == pos.x && token.pos.y == pos.y
   )
   if (!entry) {
     return
@@ -45,18 +51,33 @@ const findCharacter = (state: GameState, pos: Pos) => {
   return target
 }
 
+const nearbyCells = (pos: Pos, distance: number): Pos[] => {
+  let cells: Pos[] = []
+  for (let x = -distance; x <= distance; x++) {
+    for (let y = -distance; y <= distance; y++) {
+      if (!(x == 0 && y == 0)) {
+        cells.push({ x: pos.x + x, y: pos.y + y })
+      }
+    }
+  }
+  return cells
+}
+
 export const Cards: Card[] = [
   {
     id: "0",
     name: "melee",
-    validTargets: (state: GameState) =>
-      Object.values(state.tokens)
-        .map(({ pos }) => pos)
-        .filter((pos) => pos) as Pos[],
+    validTargets: (state: GameState) => {
+      const pos = state.tokens[state.turn]?.pos
+      if (!pos) {
+        return []
+      }
+      return nearbyCells(pos, 1)
+    },
     play: (state, event, card) => {
       const target = findCharacter(state, event.target)
       if (!target) {
-        return
+        return {}
       }
       return {
         characters: {
@@ -73,9 +94,97 @@ export const Cards: Card[] = [
       }
     },
   },
-  { id: "1", name: "heal" },
-  { id: "2", name: "projectile" },
-  { id: "3", name: "amet" },
+  {
+    id: "1",
+    name: "heal",
+    validTargets: (state: GameState) => {
+      const pos = state.tokens[state.turn]?.pos
+      if (!pos) {
+        return []
+      }
+      return nearbyCells(pos, 3)
+    },
+    play: (state, event, card) => {
+      const target = findCharacter(state, event.target)
+      if (!target) {
+        return {}
+      }
+      return {
+        characters: {
+          [target]: {
+            health: state.characters[target].health + 5,
+          },
+        },
+        cards: {
+          [event.player]: {
+            hand: state.cards[event.player].hand.filter((c) => c !== card),
+            discard: state.cards[event.player].discard.concat(card),
+          },
+        },
+      }
+    },
+  },
+  {
+    id: "2",
+    name: "projectile",
+    validTargets: (state: GameState) => {
+      const pos = state.tokens[state.turn]?.pos
+      if (!pos) {
+        return []
+      }
+      return nearbyCells(pos, 3)
+    },
+    play: (state, event, card) => {
+      const target = findCharacter(state, event.target)
+      if (!target) {
+        return {}
+      }
+      return {
+        characters: {
+          [target]: {
+            health: state.characters[target].health - 5,
+          },
+        },
+        cards: {
+          [event.player]: {
+            hand: state.cards[event.player].hand.filter((c) => c !== card),
+            discard: state.cards[event.player].discard.concat(card),
+          },
+        },
+      }
+    },
+  },
+  {
+    id: "3",
+    name: "move",
+    validTargets: (state: GameState) => {
+      const pos = state.tokens[state.turn]?.pos
+      if (!pos) {
+        return []
+      }
+      return nearbyCells(pos, 2)
+    },
+    play: (state, event, card) => {
+      const pos = state.tokens[event.player]?.pos
+      if (!pos) {
+        return
+      }
+      return {
+        tokens: {
+          [event.player]: {
+            ...state.tokens[event.player],
+            pos: event.target,
+          },
+        },
+        cards: {
+          [event.player]: {
+            hand: state.cards[event.player].hand.filter((c) => c !== card),
+            discard: state.cards[event.player].discard.concat(card),
+          },
+        },
+      }
+    },
+  },
   { id: "4", name: "consectetur" },
   { id: "5", name: "adipiscing" },
   { id: "6", name: "elit" },

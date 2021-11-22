@@ -38,8 +38,8 @@ export default function Page(props) {
 
   const mouseMove = (e) => {
     const rect = ref!.current!.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    const x = (e.clientX - rect.left) / 21
+    const y = (e.clientY - rect.top) / 21
     setState({ action: Actions.MoveMouse, value: { x, y } })
   }
 
@@ -115,7 +115,9 @@ export default function Page(props) {
                   width: "21px",
                   height: "21px",
                   backgroundColor: "grey",
-                  transform: `translate(${visualState.cursor.pos.x}px, ${visualState.cursor.pos.y}px)`,
+                  transform: `translate(${visualState.cursor.pos.x * 21}px, ${
+                    visualState.cursor.pos.y * 21
+                  }px)`,
                 }}
               />
             )}
@@ -138,7 +140,9 @@ export default function Page(props) {
                       visualState.placingTokenId == tokenId ? "50%" : "100%",
                     width: "21px",
                     height: "21px",
-                    transform: `translate(${token.pos?.x}px, ${token.pos?.y}px)`,
+                    transform: `translate(${token.pos!.x * 21}px, ${
+                      token.pos!.y * 21
+                    }px)`,
                   }}
                 />
               ))}
@@ -151,7 +155,7 @@ export default function Page(props) {
                   opacity: "50%",
                   width: "21px",
                   height: "21px",
-                  transform: `translate(${pos?.x}px, ${pos?.y}px)`,
+                  transform: `translate(${pos!.x * 21}px, ${pos!.y * 21}px)`,
                 }}
                 onClick={() =>
                   setState({
